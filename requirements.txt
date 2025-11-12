@@ -1,0 +1,7 @@
+hubspot-api-client
+python-dotenv
+requests
+schedule
+
+
+# pip install -r requirements.txt
