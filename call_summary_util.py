@@ -4,7 +4,6 @@ import requests
 from datetime import datetime
 from google import genai
 from google.genai.types import (
-    File,
     GenerateContentConfig,
     Part,
     Content,
@@ -12,10 +11,6 @@ from google.genai.types import (
 from google.genai.types import UploadFileConfig
 import logging
 from dotenv import load_dotenv
-import json
-
-# loading .env
-load_dotenv()
 
 
 logging.basicConfig(
@@ -65,20 +60,20 @@ class GeminiFileManager:
                 file=file_path,
                 config=config
             )
-            logging.info(f"✅ Uploaded successfully: {file_obj.name}")
+            logging.info(f"Uploaded successfully: {file_obj.name}")
             return file_obj
 
         except Exception as e:
-            logging.error(f"❌ Failed to upload audio: {e}")
+            logging.error(f"Failed to upload audio: {e}")
             raise
 
     
     def wait_until_ready(self, file_obj):
-        logging.info("⏳ Waiting for file to process...")
+        logging.info("Waiting for file to process...")
         while True:
             file_info = self.client.files.get(name = file_obj.name)
             if file_info.state.name != "PROCESSING":
-                logging.info("✅ File ready!")
+                logging.info("File ready!")
                 return file_info
             time.sleep(2)
 
@@ -88,48 +83,48 @@ class GeminiFileManager:
             self.client.files.delete(name = file_name)
             logging.info(f"🧹 Deleted remote file: {file_name}")
         except Exception as e:
-            logging.warning(f"⚠️ Could not delete file: {e}")
+            logging.warning(f"Could not delete file: {e}")
 
 
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT = """
-    You are an expert call analyst. Based on this call recording, provide ONLY the following sections:
+        You are an expert call analyst. Based on this call recording, provide ONLY the following sections:
 
-     1️⃣ CALL TYPE
-     - Call Type: (Inbound/Outbound, Support/Sales/Complaint/Inquiry)
-     - Primary Language(s):
+         1️⃣ CALL TYPE
+         - Call Type: (Inbound/Outbound, Support/Sales/Complaint/Inquiry)
+         - Primary Language(s):
 
-     2️⃣ OVERALL OUTCOME
-     - Overall Outcome: (Resolved/Unresolved/Follow-up needed/Escalated)
+         2️⃣ OVERALL OUTCOME
+         - Overall Outcome: (Resolved/Unresolved/Follow-up needed/Escalated)
 
-     3️⃣ PARTICIPANTS
-     For each speaker:
-     - Name/Role: [exact name from intro or within the call]
-     - Communication Style:
-     - Key Characteristics:
+         3️⃣ PARTICIPANTS
+         For each speaker:
+         - Name/Role: [exact name from intro or within the call]
+         - Communication Style:
+         - Key Characteristics:
 
-     4️⃣ CALL PURPOSE & TOPIC
-     - Main reason for call:
-     - Customer’s concern/request:
-     - Related issues discussed:
+         4️⃣ CALL PURPOSE & TOPIC
+         - Main reason for call:
+         - Customer’s concern/request:
+         - Related issues discussed:
 
-     5️⃣ RESOLUTION STATUS
-     - Was the issue resolved: Yes/No/Partial
-     - Customer Satisfaction Rating: [X/10]
-     - Satisfaction Reasoning:
-       * Initial tone
-       * Emotional changes
-       * Satisfaction indicators
-       * End tone
+         5️⃣ RESOLUTION STATUS
+         - Was the issue resolved: Yes/No/Partial
+         - Customer Satisfaction Rating: [X/10]
+         - Satisfaction Reasoning:
+           * Initial tone
+           * Emotional changes
+           * Satisfaction indicators
+           * End tone
 
-     6️⃣ TONE & SENTIMENT ANALYSIS
-     - Customer emotion: Beginning → End
-     - Agent approach:
-     - Interaction quality:
-     - Escalation points:
+         6️⃣ TONE & SENTIMENT ANALYSIS
+         - Customer emotion: Beginning → End
+         - Agent approach:
+         - Interaction quality:
+         - Escalation points:
 
-     ⚠️ DO NOT include anything else.
-     ⚠️ Ensure accurate identification of agent vs customer.
+         ⚠️ DO NOT include anything else.
+         ⚠️ Ensure accurate identification of agent vs customer.
     """
 
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
@@ -137,7 +132,7 @@ class CallSummaryGenerator:
         self.model_name = model_name
 
     def generate_summary(self, file_info):
-        logging.info("🤖 Generating filtered call summary...")
+        logging.info("Generating filtered call summary...")
 
         model = self.client.models
         
@@ -154,7 +149,6 @@ class CallSummaryGenerator:
             config=config
         )
 
-
         summary = response.text.strip()
         if not summary:
             logging.warning("Blank response, retrying...")
@@ -165,7 +159,7 @@ class CallSummaryGenerator:
         if not summary:
             raise ValueError("Empty summary after retry.")
 
-        logging.info("✅ Summary generated successfully!")
+        logging.info("Summary generated successfully!")
         return summary
 
 
@@ -173,16 +167,20 @@ class CallSummaryPipeline:
     def __init__(self, api_key, recording_url=None, file_path=None):
         self.api_key = api_key
         self.recording_url = recording_url
-        self.file_path = file_path
+        self.file_path = None
         self.downloader = AudioDownloader(recording_url)
         self.manager = GeminiFileManager(api_key)
         self.generator = CallSummaryGenerator(api_key)
+
+
+    def set_file_path(self, file_path):
+        self.file_path = file_path
 
     def run(self):
         audio_path = None
         uploaded_name = None
         try:
-            logging.info("🚀 Starting filtered call summary extraction...")
+            logging.info("Starting filtered call summary extraction...")
             if not self.file_path and not self.recording_url:
                 logging.error("Please provide file_path or recording_url")
                 return None
@@ -199,14 +197,14 @@ class CallSummaryPipeline:
             ready_file = self.manager.wait_until_ready(file_obj)
             summary = self.generator.generate_summary(ready_file)
 
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            summary_path = f"filtered_summary_{timestamp}.txt"
-            with open(summary_path, "w") as f:
-                f.write(summary)
+            # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            # summary_path = f"filtered_summary_{timestamp}.txt"
+            # with open(summary_path, "w") as f:
+            #     f.write(summary)
 
-            logging.info(f"Summary saved to: {summary_path}")
+            # logging.info(f"Summary saved to: {summary_path}")
             logging.info(f"Length: {len(summary)} characters")
-            return summary_path
+            return summary
 
         except Exception as e:
             logging.error(f"Error: {e}")
@@ -221,15 +219,21 @@ class CallSummaryPipeline:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
     RECORDING_URL = None
-    FILE_PATH = os.getcwd()+"/downloads/254434857658.mp3"
+    FILE_PATH = os.getcwd()+"/downloads/call_105.mp3"
 
-    pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL, FILE_PATH)
+    start_time = datetime.now()
+    logging.info(f"Started processing at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL)
+    pipeline.set_file_path(FILE_PATH)
     summary = pipeline.run()
 
-    summary_json = {"summary": summary}
-    with open("data.json", "w") as file:
-        json.dumps(summary_json, indent=4)
+    end_time = datetime.now()
+    duration = end_time - start_time
 
-    print("Summary saved in json!")
+    logging.info(f"Finished processing at: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logging.info(f"Total time taken: {duration.total_seconds():.2f} seconds")
+
