@@ -6,8 +6,6 @@ import openai
 
 api_client = HubSpot(access_token='pat-na2-7dbb3945-12d7-4197-ae96-8f8eb521ac6b')
 
-openai.api_key = "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"
-
 
 def get_all_calls(limit=50):
     """Fetch call records from HubSpot"""
