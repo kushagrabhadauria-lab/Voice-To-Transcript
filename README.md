@@ -9,8 +9,8 @@ Follow the steps below to set up and run the project successfully.
 Clone the GitHub repository to your local machine:
 
 ```bash
-git clone <>
-cd <>
+git clone https://github.com/kushagrabhadauria-lab/Voice-To-Transcript.git
+cd Voice-To-Transcript
 ```
 
 ---
