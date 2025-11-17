@@ -49,11 +49,12 @@ pip install -r requirements.txt
 
 ---
 
-## 3. Create .env file for correct tokens and credentials
+## 4. Create .env file for correct tokens and credentials
 
 .env.sample is created to show what enviroment variable name to be used in original .env
 
-## ▶️ 4. Run the Application
+
+## ▶️ 5. Run the Application
 
 Start the script by executing:
 
