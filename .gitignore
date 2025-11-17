@@ -1,2 +1,5 @@
 .env
 downloads/*
+updated.csv
+temp/*
+summaries.json
