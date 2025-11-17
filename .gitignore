@@ -3,3 +3,5 @@ downloads/*
 summaries.json
 updated.csv
 temp/*
+__pycache__
+*.pyc
