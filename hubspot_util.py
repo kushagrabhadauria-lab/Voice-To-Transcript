@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from hubspot import HubSpot
-from hubspot.crm.objects.calls import SimplePublicObjectInput
+from hubspot.crm.objects.calls import SimplePublicObjectInput, BatchInputSimplePublicObjectBatchInput
 from hubspot.crm.objects import ApiException
 
 load_dotenv()
@@ -115,7 +115,7 @@ class HubSpotClient:
 
 
     def update_call_transcription(self, call_id: str, message: str):
-        """Update custom property 'model_to_hb_transcription'"""
+        """Update custom property 'model_to_hb_transcription' one call at a TIME"""
         update_obj = SimplePublicObjectInput(properties={"model_to_hb_transcription": message})
         try:
             self.client.crm.objects.calls.basic_api.update(
@@ -130,6 +130,39 @@ class HubSpotClient:
             
             print(f"Failed to update call {call_id}: {e}")
 
+    
+    def bulk_update_call_transcription(self, calls_info: list):
+        '''
+            Bulk upload transcription to hubspot to 'model_to_hb_transcription'
+            call_info = [
+                {"call_id": "12345", "summary": "Transcription text..."},
+                {"call_idid": "67890", "summary": "Another transcription..."},
+                ...
+            ]
+        '''
+        try:
+            inputs = []
+            for item in calls_info:
+                inputs.append(
+                    SimplePublicObjectInput(
+                        id=item["call_id"],
+                        properties={
+                            "model_to_hb_transaction": item["summary"]
+                        }
+                    )
+                )
+
+            batch_body = BatchInputSimplePublicObjectBatchInput(inputs=inputs)
+
+            self.client.crm.objects.calls.batch_api.update(batch_body)
+            print(f"[SUCCESS] Bulk upload successful total file: {len(calls_info)}.")
+
+        except Exception as err:
+            with open("logs/failed_files.txt", "a") as failed_file:
+                curr_time_stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                failed_file.write(f"[{curr_time_stamp}] [ERROR] bulk upload failed {err}")
+            
+            print(f"[ERROR] Bulk upload failed : {err}")
 
 
 if __name__ == "__main__":
