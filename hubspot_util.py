@@ -175,7 +175,7 @@ class HubSpotClient:
         try:
             filters = [
                 Filter(
-                    property_name="hs_recording_url_id",   # <-- your ID field here
+                    property_name="recording_url_id",   # <-- your ID field here
                     operator="EQ",
                     value=recording_url_id
                 )
@@ -185,8 +185,7 @@ class HubSpotClient:
 
             search_request = PublicObjectSearchRequest(
                 filter_groups=[filter_group],
-                limit=1,
-                properties=["hs_recording_url_id", "hs_call_recording_url", "hs_call_start_time"]
+                properties=["recording_url_id", "hs_call_recording_url", "hs_call_start_time"]
             )
 
             results = self.client.crm.objects.calls.search_api.do_search(
@@ -195,17 +194,46 @@ class HubSpotClient:
 
             return results.results
 
-
-
         except Exception as err:
             print(f"[ERROR] Unable to get call_id obj for this recording_url_id : {err}")
 
 
+    def get_call_with_empty_summary_and_recording_url_id(self):
+        from hubspot.crm.objects.calls.models import PublicObjectSearchRequest, Filter, FilterGroup
+        try:
+            filters = [
+                Filter(
+                    property_name="recording_url_id",
+                    operator="HAS_PROPERTY"
+                ),
+                Filter(
+                    property_name="model_to_hb_transcription",
+                    operator="NOT_HAS_PROPERTY"
+                )
+            ]
+
+            filter_group = FilterGroup(filters=filters)
+
+            search_request = PublicObjectSearchRequest(
+                filter_groups=[filter_group],
+                properties=["recording_url_id", "hs_call_recording_url", "hs_call_start_time"]
+            )
+
+            results = self.client.crm.objects.calls.search_api.do_search(
+                public_object_search_request=search_request
+            )
+
+            return results.results
+
+        except Exception as err:
+            print(f"[ERROR] Unable to get call_id obj for this recording_url_id : {err}")
+
 if __name__ == "__main__":
     hubspot_client = HubSpotClient(HUBSPOT_TOKEN)
-    url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv")
-    url_ids = url_id_obj.get_recording_url_id(1)
-    for id in url_ids:
-        result = hubspot_client.get_call_recording_with_recording_url_id(str(id))
-        print("result: ", result)
+    # url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv")
+    # url_ids = url_id_obj.get_recording_url_id(5)
+    # for id in url_ids:
+    #     result = hubspot_client.get_call_recording_with_recording_url_id(str(id))
+    #     print("result: ", result)
 
+    print(hubspot_client.get_call_with_empty_summary_and_recording_url_id())

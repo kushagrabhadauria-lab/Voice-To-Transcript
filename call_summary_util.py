@@ -148,7 +148,7 @@ class CallSummaryGenerator:
             contents=[Content(parts=parts)],
             config=config
         )
-
+        print("response_text: ", response.text)
         summary = response.text.strip()
         if not summary:
             logging.warning("Blank response, retrying...")

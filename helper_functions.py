@@ -76,9 +76,9 @@ class GetRecordingUrlIdFromCsv:
     ''' 
     import pandas as pd
     def __init__(self, file_path: str):
-        self.df = self.pd.read_csv(file_path)
+        self.df = self.pd.read_csv(file_path, dtype={"ID": str})
 
-    def get_recording_url_id(self, limit = 5):
+    def get_recording_url_id(self, limit = 200):
         done_df = self.df[self.df["Done"].str.upper() == "YES"]
     
         # Extract only the ID column
