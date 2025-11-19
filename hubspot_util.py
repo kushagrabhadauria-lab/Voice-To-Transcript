@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from hubspot import HubSpot
 from hubspot.crm.objects.calls import SimplePublicObjectInput, BatchInputSimplePublicObjectBatchInput
 from hubspot.crm.objects import ApiException
+from helper_functions import GetRecordingUrlIdFromCsv
 
 load_dotenv()
 
@@ -165,13 +166,46 @@ class HubSpotClient:
             print(f"[ERROR] Bulk upload failed : {err}")
 
 
+
+    def get_call_recording_with_recording_url_id(self, recording_url_id: str):
+        '''
+            Get single call recording obj from recording_url_id filter
+        '''
+        from hubspot.crm.objects.calls.models import PublicObjectSearchRequest, Filter, FilterGroup
+        try:
+            filters = [
+                Filter(
+                    property_name="hs_recording_url_id",   # <-- your ID field here
+                    operator="EQ",
+                    value=recording_url_id
+                )
+            ]
+
+            filter_group = FilterGroup(filters=filters)
+
+            search_request = PublicObjectSearchRequest(
+                filter_groups=[filter_group],
+                limit=1,
+                properties=["hs_recording_url_id", "hs_call_recording_url", "hs_call_start_time"]
+            )
+
+            results = self.client.crm.objects.calls.search_api.do_search(
+                public_object_search_request=search_request
+            )
+
+            return results.results
+
+
+
+        except Exception as err:
+            print(f"[ERROR] Unable to get call_id obj for this recording_url_id : {err}")
+
+
 if __name__ == "__main__":
     hubspot_client = HubSpotClient(HUBSPOT_TOKEN)
-    call_recordings = hubspot_client.get_calls_with_recordings()
-    for call in call_recordings:
-        print("caller_id: ", call.id)
-        print("recording_url: ", call.properties["hs_call_recording_url"])
-        print("model_to_hb_transcription", call.properties["model_to_hb_transcription"])
-
-        print("\n\n")
+    url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv")
+    url_ids = url_id_obj.get_recording_url_id(1)
+    for id in url_ids:
+        result = hubspot_client.get_call_recording_with_recording_url_id(str(id))
+        print("result: ", result)
 
