@@ -51,6 +51,8 @@ class Interface():
             )
 
             summary = self.call_summary_pipeline.run()
+            if summary is None or summary.strip() == "":
+                raise ValueError("Summary was empty in run().")
             # update hubspot
             self.hubspot_client_obj.update_call_transcription(call_id, summary)
             with open("logs/success_files.txt", "a") as f:
@@ -64,7 +66,8 @@ class Interface():
             return f"[FAILED] {call_id}: {err}"
         
         finally:
-            os.remove(os.getcwd()+f"/downloads/{call_id}.mp3")
+            # os.remove(os.getcwd()+f"/downloads/{call_id}.mp3")
+            pass
     
     
     def run(self):

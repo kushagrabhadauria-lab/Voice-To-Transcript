@@ -187,12 +187,3 @@
 [2025-11-19 16:09:11.808844] call_id: 251699195593 Processed successfully.
 [2025-11-19 16:09:16.927597] call_id: 242639914742 Processed successfully.
 [2025-11-19 16:09:22.249715] call_id: 250793850558 Processed successfully.
-[2025-11-19 16:09:59.515591] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:12:21.245651] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:14:42.457846] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:15:34.736610] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:16:55.060244] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:18:15.543938] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:18:48.518566] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:20:51.983257] call_id: 247441166033 Processed successfully.
-[2025-11-19 16:22:18.377060] call_id: 247441166033 Processed successfully.

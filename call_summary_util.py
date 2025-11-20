@@ -148,19 +148,21 @@ class CallSummaryGenerator:
             contents=[Content(parts=parts)],
             config=config
         )
-        print("response_text: ", response.text)
-        summary = response.text.strip()
+
+        summary = response.text
         if not summary:
             logging.warning("Blank response, retrying...")
-            parts.append("\nIf unclear, summarize based on audible sections only.")
-            response = model.generate_content(contents=[Content(parts=parts)], config=config)
-            summary = response.text.strip()
+            parts.append(
+                Part.from_text(text="If unclear, summarize based on audible sections only.")
+            )
+            response = model.generate_content(model="gemini-2.5-flash", contents=[Content(parts=parts)], config=config)
+            summary = response.text
 
         if not summary:
             raise ValueError("Empty summary after retry.")
 
         logging.info("Summary generated successfully!")
-        return summary
+        return summary.strip()
 
 
 class CallSummaryPipeline:
@@ -196,7 +198,6 @@ class CallSummaryPipeline:
 
             ready_file = self.manager.wait_until_ready(file_obj)
             summary = self.generator.generate_summary(ready_file)
-
             # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             # summary_path = f"filtered_summary_{timestamp}.txt"
             # with open(summary_path, "w") as f:
@@ -208,6 +209,7 @@ class CallSummaryPipeline:
 
         except Exception as e:
             logging.error(f"Error: {e}")
+            raise
         
         # finally:
         #     if uploaded_name:
