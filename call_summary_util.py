@@ -157,6 +157,8 @@ class CallSummaryGenerator:
             )
             response = model.generate_content(model="gemini-2.5-flash", contents=[Content(parts=parts)], config=config)
             summary = response.text
+        
+        
 
         if not summary:
             raise ValueError("Empty summary after retry.")
@@ -198,6 +200,7 @@ class CallSummaryPipeline:
 
             ready_file = self.manager.wait_until_ready(file_obj)
             summary = self.generator.generate_summary(ready_file)
+
             # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             # summary_path = f"filtered_summary_{timestamp}.txt"
             # with open(summary_path, "w") as f:
@@ -224,7 +227,7 @@ if __name__ == "__main__":
     load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
     RECORDING_URL = None
-    FILE_PATH = os.getcwd()+"/downloads/call_105.mp3"
+    FILE_PATH = os.getcwd()+"/downloads/call_19.mp3"
 
     start_time = datetime.now()
     logging.info(f"Started processing at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
