@@ -89,8 +89,24 @@ class GetRecordingUrlIdFromCsv:
             ids = ids[:limit]
     
         return ids
-    
+
+class SentimentScoreExtractor:
+    '''
+        Class to get Sentiment score from summary
+    '''
+    sentiment_pattern = r"Rating:\s*(\d+)/10"
+
+    def get_sentiment(self, summary):
+        import re
+        if not summary:
+            return None
+        match = re.search(self.sentiment_pattern, summary)
+        if match:
+            return match.group(1)
+        
+        return None
+
 
 if __name__ == "__main__":
-    url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv")
+    url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
     print(url_id_obj.get_recording_url_id())

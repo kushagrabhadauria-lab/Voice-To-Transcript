@@ -35,7 +35,7 @@ class Interface():
         self.download_from_drive_obj = DownloadFromDrive()
         self.download_audio_obj = AudioDownloader()
         # If you need CSV helper in test_run, uncomment and set correct path:
-        # self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/.../500_recording_url.csv")
+        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/.../500_recording_url.csv")
 
         self.processed_ids = []
         # changed: Ensure logs dir exists
@@ -115,7 +115,6 @@ class Interface():
     def run(self):
         try:
             call_recordings = self.hubspot_client_obj.get_call_with_empty_summary_and_recording_url_id()
-            call_recordings = call_recordings[:]
 
             # changed: to store both recording url and recording_url_id in dict
             call_recording_dict = {
@@ -127,10 +126,10 @@ class Interface():
             }                                                              # changed
 
             print(f"📞 Total calls to process: {len(call_recording_dict)}")
-
+            
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=1) as executor:
+            with ThreadPoolExecutor(max_workers=10) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call,
@@ -153,10 +152,9 @@ class Interface():
         
     def test_run(self):
         try:
-            url_ids = self.get_call_recording_ids_from_csv_obj.get_recording_url_id()
-            self.processed_ids = url_ids[100: ]
-            print(str(self.processed_ids))
-            
+            self.processed_ids = self.get_call_recording_ids_from_csv_obj.get_recording_url_id()
+        
+            print(self.processed_ids)
             call_recordings = []
             for id in self.processed_ids:
                 try:
@@ -179,7 +177,7 @@ class Interface():
             print(f"📞 Total calls to process: {len(call_recording_dict)}")
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=20) as executor:
+            with ThreadPoolExecutor(max_workers=10) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call, call_id, call_obj["recording_url"], call_obj.get("recording_url_id")

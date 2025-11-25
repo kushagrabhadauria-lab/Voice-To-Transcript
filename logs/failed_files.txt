@@ -45,3 +45,13 @@
 [2025-11-21 15:06:53.700395] call_id: 228346905292 recording_url_id: 1760683492.132927 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
 [2025-11-21 15:07:22.754008] call_id: 228352312048 recording_url_id: 1760684603.134034 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
 [2025-11-21 15:07:51.702615] call_id: 228262749884 recording_url_id: 1760686289.135669 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:12.692745] call_id: 227128638168 recording_url_id: 1760607850.4207 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:12.907732] call_id: 228346905292 recording_url_id: 1760683492.132927 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:13.569743] call_id: 229528032971 recording_url_id: 1760765397.559967 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:13.675015] call_id: 228957482732 recording_url_id: 1760714223.165210 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:13.769231] call_id: 227576731373 recording_url_id: 1760617549.116176 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:13.770700] call_id: 228352312048 recording_url_id: 1760684603.134034 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:14.746567] call_id: 229517322974 recording_url_id: 1760771249.414217 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:14.828372] call_id: 229513806579 recording_url_id: 1760777492.423089 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 09:41:14.974003] call_id: 228262749884 recording_url_id: 1760686289.135669 error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'The model is overloaded. Please try again later.', 'status': 'UNAVAILABLE'}}
+[2025-11-24 15:37:00] [ERROR] 1762172946.116665 cannot find rating in summary.

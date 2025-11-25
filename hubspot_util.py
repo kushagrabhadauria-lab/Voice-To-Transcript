@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from hubspot import HubSpot
 from hubspot.crm.objects.calls import SimplePublicObjectInput, BatchInputSimplePublicObjectBatchInput
 from hubspot.crm.objects import ApiException
-from helper_functions import GetRecordingUrlIdFromCsv
+from helper_functions import GetRecordingUrlIdFromCsv, SentimentScoreExtractor
 
 load_dotenv()
 
@@ -132,6 +132,65 @@ class HubSpotClient:
             print(f"Failed to update call {call_id}: {e}")
 
     
+    def get_call_by_recording_url_id(self, record_url_id: str):
+        """
+            Fetch a call record that matches the given recording_url_id.
+            Returns the HubSpot call object if found, else returns None.
+        """
+        from hubspot.crm.objects.calls.models import PublicObjectSearchRequest, Filter, FilterGroup
+        from hubspot.crm.objects.calls.exceptions import ApiException
+
+        # Filter: recording_url_id == provided ID
+        filter_ = Filter(
+            property_name="recording_url_id",
+            operator="EQ",
+            value=record_url_id
+        )
+
+        filter_group = FilterGroup(filters=[filter_])
+
+        search_request = PublicObjectSearchRequest(
+            filter_groups=[filter_group],
+            limit=1,
+            properties=["recording_url_id", "hs_call_start_time", "hs_call_title", "sentiment_score", "model_to_hb_transcription"]
+        )
+
+        try:
+            results = self.client.crm.objects.calls.search_api.do_search(
+                public_object_search_request=search_request
+            )
+
+            if results and results.results:
+                return results.results[0]   # return the first (and only) matched call
+            else:
+                return None
+
+        except ApiException as e:
+            print(f"Error fetching call by recording_url_id {record_url_id}: {e}")
+            return None
+
+
+
+    def update_sentiment_score(self, call_id: str, rating: int):
+        ''' update sentiment_score in hubspot'''
+        try:
+            update_obj = SimplePublicObjectInput(properties={"sentiment_score": rating})
+            self.client.crm.objects.calls.basic_api.update(
+                call_id=call_id,
+                simple_public_object_input=update_obj
+            )
+            print(f" Updated model_to_hb_transcription for call {call_id}")
+
+        except ApiException as e:
+            with open("logs/failed_files.txt", 'a') as failed_file:
+                curr_time_stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                failed_file.write(f"[{curr_time_stamp}] call_id: {call_id} failed to update call : {e}\n")
+            
+            print(f"Failed to update call {call_id}: {e}")
+
+        
+
+
     def bulk_update_call_transcription(self, calls_info: list):
         '''
             Bulk upload transcription to hubspot to 'model_to_hb_transcription'
@@ -200,40 +259,73 @@ class HubSpotClient:
 
     def get_call_with_empty_summary_and_recording_url_id(self):
         from hubspot.crm.objects.calls.models import PublicObjectSearchRequest, Filter, FilterGroup
-        try:
-            filters = [
-                Filter(
-                    property_name="recording_url_id",
-                    operator="HAS_PROPERTY"
-                ),
-                Filter(
-                    property_name="model_to_hb_transcription",
-                    operator="NOT_HAS_PROPERTY"
-                )
-            ]
+        try:        
+                filters = [
+                    Filter(property_name="recording_url_id", operator="HAS_PROPERTY"),
+                    Filter(property_name="model_to_hb_transcription", operator="NOT_HAS_PROPERTY")
+                ]
+                filter_group = FilterGroup(filters=filters)
 
-            filter_group = FilterGroup(filters=filters)
+                all_results = []
+                after = None
 
-            search_request = PublicObjectSearchRequest(
-                filter_groups=[filter_group],
-                properties=["recording_url_id", "hs_call_recording_url", "hs_call_start_time"]
-            )
+                while True:
+                    search_request = PublicObjectSearchRequest(
+                        filter_groups=[filter_group],
+                        properties=["recording_url_id", "hs_call_recording_url", "hs_call_start_time"],
+                        limit=100,
+                        after=after
+                    )
 
-            results = self.client.crm.objects.calls.search_api.do_search(
-                public_object_search_request=search_request
-            )
+                    response = self.client.crm.objects.calls.search_api.do_search(
+                        public_object_search_request=search_request
+                    )
 
-            return results.results
+                    all_results.extend(response.results)
+
+                    if not response.paging or not response.paging.next:
+                        break
+                    
+                    after = response.paging.next.after   # move to next page
+
+                return all_results
 
         except Exception as err:
             print(f"[ERROR] Unable to get call_id obj for this recording_url_id : {err}")
 
 if __name__ == "__main__":
     hubspot_client = HubSpotClient(HUBSPOT_TOKEN)
-    # url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv")
-    # url_ids = url_id_obj.get_recording_url_id(5)
+    sentiment_score_extractor_obj = SentimentScoreExtractor()
+    url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
+    url_ids = url_id_obj.get_recording_url_id()
+    print(len(url_ids))
+    
+    # count = 0
+    # for url_id in url_ids:
+    #     call_data = hubspot_client.get_call_by_recording_url_id(url_id)
+    #     summary = call_data.properties["model_to_hb_transcription"]
+    #     rating = sentiment_score_extractor_obj.get_sentiment(summary)
+
+    #     if rating:
+    #         rating = int(rating)
+    #         print(count, "url_id: ", url_id)
+    #         count+=1
+    #         call_id = call_data.id
+    #         hubspot_client.update_sentiment_score(call_id, rating)
+    #         with open("logs/success_files.txt", "a") as f:
+    #             f.write(
+    #                 f"[{datetime.now()}] call_id: {call_id} recording_url_id: {url_id} sentiment updated successfully.\n"
+    #             )
+
+    #     else:
+    #         with open("logs/failed_files.txt", "a") as failed_file:
+    #                 curr_time_stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #                 failed_file.write(f"[{curr_time_stamp}] [ERROR] {url_id} cannot find rating in summary.")
+
+    #         print(f"[ERROR] rating not found")
+    
     # for id in url_ids:
     #     result = hubspot_client.get_call_recording_with_recording_url_id(str(id))
     #     print("result: ", result)
 
-    print(hubspot_client.get_call_with_empty_summary_and_recording_url_id())
+    # print(hubspot_client.get_call_with_empty_summary_and_recording_url_id())
