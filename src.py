@@ -117,7 +117,8 @@ class Interface():
     
     def run(self):
         try:
-            call_recordings = self.hubspot_client_obj.get_call_with_empty_summary_and_recording_url_id()
+            # call_recordings = self.hubspot_client_obj.get_call_with_empty_summary_and_recording_url_id()
+            call_recordings = self.hubspot_client_obj.get_calls_with_recordings()
             # changed: to store both recording url and recording_url_id in dict
             call_recording_dict = {
                 call.id: {

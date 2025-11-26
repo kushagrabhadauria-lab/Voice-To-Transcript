@@ -45,8 +45,62 @@ class AudioDownloader:
 
 
 class GeminiFileManager:
+
+    SMALL_FILE_LIMIT_MB = 20.0
+
     def __init__(self, api_key):
         self.client = genai.Client(api_key=api_key)
+
+    def is_small_file(self, file_path):
+        '''helper function to check if file is less than LIMIT.'''
+        size_mb = os.path.getsize(file_path)/ (1024*1024)
+        return size_mb<=self.SMALL_FILE_LIMIT_MB
+
+
+    def upload_small_file(self, file_path):
+        '''Uploading files which are less than LIMIT directly. No file api'''
+        logging.info("Uploading small file directly with Part.from_bytes()")
+        try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+
+            return Part.from_bytes(
+                data=data,
+                mime_type="audio/mpeg"
+            )
+        
+        except Exception as err:
+            logging.error(f"Failed to upload audio: {err}")
+
+    
+    def upload_large_file(self, file_path):
+        """Upload via Gemini File API."""
+        try:
+            logging.info("Uploading large file using client.files.upload()")
+            config = UploadFileConfig(
+                mime_type="audio/mpeg",
+                display_name="Call Recording"
+            )
+            file_obj = self.client.files.upload(file=file_path, config=config)
+            return file_obj
+        
+        except Exception as err:
+            logging.error(f"Failed to upload audio: {err}")
+    
+
+    def prepare_file(self, file_path):
+        try:
+            '''Return Part obj or file_obj according to file size'''
+            if self.is_small_file(file_path):
+                return self.upload_small_file(file_path), "small"
+
+            else:
+                return self.upload_large_file(file_path), "large"
+            
+        except Exception as err:
+            raise(f"[ERROR] cannot upload file : {err}")
+        
+
 
     def upload_file(self, file_path, mime_type="audio/mpeg", display_name="Call Recording"):
         logging.info("Uploading audio to Gemini...")
@@ -131,17 +185,35 @@ class CallSummaryGenerator:
         self.client = genai.Client(api_key=api_key)
         self.model_name = model_name
 
-    def generate_summary(self, file_info):
+    def generate_summary(self, file_input, file_type):
+        '''
+            file_input:
+                - SMALL FILE → Part object (Part.from_bytes)
+                - LARGE FILE → file_info object returned from Gemini after upload
+            file_type: "small" or "large"
+
+        '''
         logging.info("Generating filtered call summary...")
 
         model = self.client.models
         
         config = GenerateContentConfig(temperature=0.2)
 
-        parts = [
-            Part.from_uri(file_uri = file_info.uri, mime_type=file_info.mime_type),
-            Part.from_text(text = self.FILTERED_SUMMARY_PROMPT),
-        ]
+        if file_type == "large":
+            # file_input is a Gemini file_info object
+            parts = [
+                Part.from_uri(
+                    file_uri=file_input.uri,
+                    mime_type=file_input.mime_type
+                ),
+                Part.from_text(text=self.FILTERED_SUMMARY_PROMPT),
+            ]
+        else:
+            # file_input is already a Part.from_bytes object
+            parts = [
+                file_input,
+                Part.from_text(text=self.FILTERED_SUMMARY_PROMPT),
+            ]
 
         response = model.generate_content(
             model="gemini-2.5-flash",
@@ -149,16 +221,7 @@ class CallSummaryGenerator:
             config=config
         )
 
-        summary = response.text
-        if not summary:
-            logging.warning("Blank response, retrying...")
-            parts.append(
-                Part.from_text(text="If unclear, summarize based on audible sections only.")
-            )
-            response = model.generate_content(model="gemini-2.5-flash", contents=[Content(parts=parts)], config=config)
-            summary = response.text
-        
-        
+        summary = response.text        
 
         if not summary:
             raise ValueError("Empty summary after retry.")
@@ -182,7 +245,6 @@ class CallSummaryPipeline:
 
     def run(self):
         audio_path = None
-        uploaded_name = None
         try:
             logging.info("Starting filtered call summary extraction...")
             if not self.file_path and not self.recording_url:
@@ -195,18 +257,16 @@ class CallSummaryPipeline:
             else:
                 audio_path = self.file_path
 
-            file_obj = self.manager.upload_file(audio_path)
-            uploaded_name = file_obj.name
 
-            ready_file = self.manager.wait_until_ready(file_obj)
-            summary = self.generator.generate_summary(ready_file)
+            file_obj_or_part, file_type = self.manager.prepare_file(audio_path)
+            
+            # if file_type "large"
+            if file_type == "large":
+                file_obj_or_part = self.manager.wait_until_ready(file_obj_or_part)
 
-            # timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            # summary_path = f"filtered_summary_{timestamp}.txt"
-            # with open(summary_path, "w") as f:
-            #     f.write(summary)
+            #generate summary
 
-            # logging.info(f"Summary saved to: {summary_path}")
+            summary = self.generator.generate_summary(file_obj_or_part, file_type)
             logging.info(f"Length: {len(summary)} characters")
             return summary
 
@@ -214,12 +274,6 @@ class CallSummaryPipeline:
             logging.error(f"Error: {e}")
             raise
         
-        # finally:
-        #     if uploaded_name:
-        #         self.manager.delete_file(uploaded_name)
-        #     if audio_path and os.path.exists(audio_path):
-        #         os.remove(audio_path)
-        #         logging.info("Local audio file deleted.")
 
 
 
