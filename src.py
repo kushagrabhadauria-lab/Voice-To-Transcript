@@ -123,7 +123,7 @@ class Interface():
             call_recording_dict = {
                 call.id: {
                     "recording_url": call.properties.get("hs_call_recording_url"),
-                    "recording_url_id": call.properties.get("recording_url_id") or call.properties.get("recording_url_id", None)
+                    # "recording_url_id": call.properties.get("recording_url_id") or call.properties.get("recording_url_id", None)
                 }
                 for call in call_recordings
             }                                                              # changed
@@ -132,7 +132,7 @@ class Interface():
             call_processed_count = 1
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=7) as executor:
+            with ThreadPoolExecutor(max_workers=1) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call,
