@@ -35,7 +35,7 @@ class Interface():
         self.download_from_drive_obj = DownloadFromDrive()
         self.download_audio_obj = AudioDownloader()
         # If you need CSV helper in test_run, uncomment and set correct path:
-        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/.../500_recording_url.csv")
+        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
 
         self.processed_ids = []
         # changed: Ensure logs dir exists
@@ -43,10 +43,10 @@ class Interface():
     
     def process_single_call(self, call_id, call_url, recording_url_id=None):
         """
-        Process a single call:
-        - download file
-        - run summary pipeline (with retries for transient failures)
-        - update hubspot
+            Process a single call:
+            - download file
+            - run summary pipeline (with retries for transient failures)
+            - update hubspot
         """
         try:
             logging.info(f"Starting processing call_id={call_id} recording_url_id={recording_url_id}")
@@ -81,7 +81,10 @@ class Interface():
                 raise ValueError("Summary was empty in run().")
 
             # update hubspot
-            self.hubspot_client_obj.update_call_transcription(call_id, summary)
+            # self.hubspot_client_obj.update_call_transcription(call_id, summary)
+            
+            #updating both summary and sentiment score
+            self.hubspot_client_obj.update_summary_and_sentiment_score(call_id, summary)
 
             # changed: Write success log with recording_url_id included
             with open("logs/success_files.txt", "a") as f:
@@ -105,17 +108,16 @@ class Interface():
         finally:
             # Don't remove file immediately so you can inspect in case of problems.
             # If you want to remove, uncomment:
-            # try:
-            #     os.remove(file_full_path)
-            # except Exception:
-            #     pass
-            pass
+            try:
+                os.remove(file_full_path)
+            except Exception:
+                pass
+
     
     
     def run(self):
         try:
             call_recordings = self.hubspot_client_obj.get_call_with_empty_summary_and_recording_url_id()
-
             # changed: to store both recording url and recording_url_id in dict
             call_recording_dict = {
                 call.id: {
@@ -126,10 +128,10 @@ class Interface():
             }                                                              # changed
 
             print(f"📞 Total calls to process: {len(call_recording_dict)}")
-            
+            call_processed_count = 1
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=7) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call,
@@ -144,6 +146,8 @@ class Interface():
                     result = future.result()
                     results.append(result)
                     print(result)
+                    print("call_processed_count: ", call_processed_count)
+                    call_processed_count+=1
 
             print("All threads completed!")
 
@@ -164,8 +168,6 @@ class Interface():
                     with open("logs/failed_files.txt", "a") as f:
                         f.write(f"[{datetime.now()}] call_id: {id} error: {err}\n")
 
-            
-
             call_recording_dict = {
                 call.id: {"recording_url": call.properties["hs_call_recording_url"], "recording_url_id": call.properties["recording_url_id"]}
                 for call in call_recordings
@@ -177,7 +179,7 @@ class Interface():
             print(f"📞 Total calls to process: {len(call_recording_dict)}")
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor(max_workers=7) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call, call_id, call_obj["recording_url"], call_obj.get("recording_url_id")
@@ -196,13 +198,12 @@ class Interface():
             raise Exception(f"Unexpected error: {err}")
         
         finally:
-            # print("processed_id: ", self.processed_ids)
-            # csv_path = "/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv"
-            # df = pd.read_csv(csv_path)
-            # df["summary_updated"] = df["ID"].isin(self.processed_ids)
-            # df.to_csv(csv_path, index=False)
-            # print(f"[OK] CSV updated successfully")
-            pass
+            print("processed_id: ", self.processed_ids)
+            csv_path = "/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv"
+            df = pd.read_csv(csv_path)
+            df["summary_updated"] = df["ID"].isin(self.processed_ids)
+            df.to_csv(csv_path, index=False)
+            print(f"[OK] CSV updated successfully")
 
 
 

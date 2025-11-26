@@ -20,6 +20,7 @@ class HubSpotClient:
 
     def __init__(self, access_token: str):
         self.client = HubSpot(access_token=access_token)
+        self.sentiment_extractor_obj = SentimentScoreExtractor()
 
     def get_recent_calls_by_endtime(self, hours: int = 6, limit: int = 100):
         """
@@ -189,6 +190,35 @@ class HubSpotClient:
             print(f"Failed to update call {call_id}: {e}")
 
         
+
+    def update_summary_and_sentiment_score(self, call_id: str, summary: str):
+        '''
+            Using call_id and summary we need to populate both summary and sentiment score
+        '''
+        try:
+            sentiment_score = self.sentiment_extractor_obj.get_sentiment(summary)
+            if not sentiment_score:
+                raise ValueError("Cannot find Sentiment score in summary.")
+            
+            update_obj = SimplePublicObjectInput(properties={
+                "model_to_hb_transcription": summary,
+                "sentiment_score": int(sentiment_score)
+            })
+
+            self.client.crm.objects.calls.basic_api.update(
+                call_id=call_id,
+                simple_public_object_input=update_obj
+            )
+
+            print(f" Updated model_to_hb_transcription and sentiment_score for call {call_id}")
+            
+
+        except Exception as err:
+            with open("logs/failed_files.txt", 'a') as failed_file:
+                curr_time_stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                failed_file.write(f"[{curr_time_stamp}] call_id: {call_id} failed to update call summary and sentiment_score : {err}\n")
+            
+            print(f"Failed to update call {call_id}: {err}")
 
 
     def bulk_update_call_transcription(self, calls_info: list):
