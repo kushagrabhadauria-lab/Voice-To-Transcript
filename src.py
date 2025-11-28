@@ -9,6 +9,7 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 import time
+from threading import Lock
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,6 +25,8 @@ class Interface():
     '''
     def __init__(self):
         # changed: ensure downloads path ends with slash and exists
+        self.count = 0
+        self.gemini_lock = Lock()
         self.file_path = os.path.join(os.getcwd(), "downloads") + os.sep  # changed
         os.makedirs(self.file_path, exist_ok=True)                       # changed
 
@@ -35,7 +38,7 @@ class Interface():
         self.download_from_drive_obj = DownloadFromDrive()
         self.download_audio_obj = AudioDownloader()
         # If you need CSV helper in test_run, uncomment and set correct path:
-        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
+        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - New 200 Urls.csv")
 
         self.processed_ids = []
         # changed: Ensure logs dir exists
@@ -65,7 +68,10 @@ class Interface():
                 try:
                     attempt += 1                                           # changed
                     logging.info(f"Running summary pipeline for call_id={call_id} attempt={attempt}")  # changed
-                    summary = self.call_summary_pipeline.run()             # changed
+                    with self.gemini_lock:
+                        summary = self.call_summary_pipeline.run()     
+                    print("count: ", self.count)
+                    self.count+=1
                     # If pipeline.run() returns successfully, break out
                     break                                                  # changed
                 except Exception as e:
@@ -153,12 +159,12 @@ class Interface():
 
         except Exception as err:
             raise Exception(f"Unexpected error: {err}")
-        
+
+
     def test_run(self):
         try:
             self.processed_ids = self.get_call_recording_ids_from_csv_obj.get_recording_url_id()
-        
-            print(self.processed_ids)
+            
             call_recordings = []
             for id in self.processed_ids:
                 try:
@@ -175,11 +181,12 @@ class Interface():
 
             # print(call_recording_dict)
 
-            print("call_recording_dict: ", call_recording_dict)
+            # print("call_recording_dict: ", call_recording_dict)
             print(f"📞 Total calls to process: {len(call_recording_dict)}")
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=7) as executor:
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call, call_id, call_obj["recording_url"], call_obj.get("recording_url_id")
@@ -198,13 +205,13 @@ class Interface():
             raise Exception(f"Unexpected error: {err}")
         
         finally:
-            print("processed_id: ", self.processed_ids)
-            csv_path = "/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv"
-            df = pd.read_csv(csv_path)
-            df["summary_updated"] = df["ID"].isin(self.processed_ids)
-            df.to_csv(csv_path, index=False)
-            print(f"[OK] CSV updated successfully")
-
+            # print("processed_id: ", self.processed_ids)
+            # csv_path = "/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv"
+            # df = pd.read_csv(csv_path)
+            # df["summary_updated"] = df["ID"].isin(self.processed_ids)
+            # df.to_csv(csv_path, index=False)
+            # print(f"[OK] CSV updated successfully")
+            pass
 
 
 if __name__ == "__main__":
@@ -213,6 +220,7 @@ if __name__ == "__main__":
 
     interface = Interface()
     interface.run()
+    # interface.test_run()
 
     end_time = datetime.now()
     duration = end_time - start_time
