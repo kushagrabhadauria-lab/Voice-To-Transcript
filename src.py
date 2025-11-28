@@ -35,21 +35,24 @@ class Interface():
         self.download_from_drive_obj = DownloadFromDrive()
         self.download_audio_obj = AudioDownloader()
         # If you need CSV helper in test_run, uncomment and set correct path:
-        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
+        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - New 500 Urls.csv")
 
         self.processed_ids = []
+        self.count = 1
         # changed: Ensure logs dir exists
         os.makedirs("logs", exist_ok=True)                                # changed
+    
     
     def process_single_call(self, call_id, call_url, recording_url_id=None):
         """
             Process a single call:
             - download file
-            - run summary pipeline (with retries for transient failures)
+            - run summary pipeline (retry happens inside pipeline)
             - update hubspot
         """
         try:
             logging.info(f"Starting processing call_id={call_id} recording_url_id={recording_url_id}")
+
             # download the audio
             self.download_audio_obj.download(call_url, call_id)
 
@@ -57,46 +60,28 @@ class Interface():
             file_full_path = os.path.join(self.file_path, f"{call_id}.mp3")
             self.call_summary_pipeline.set_file_path(file_full_path)
 
-            # changed: Retry loop for transient errors (e.g., 503 model overloaded)
-            max_attempts = 3                                              # changed
-            attempt = 0                                                   # changed
-            summary = None                                                # changed
-            while attempt < max_attempts:
-                try:
-                    attempt += 1                                           # changed
-                    logging.info(f"Running summary pipeline for call_id={call_id} attempt={attempt}")  # changed
-                    summary = self.call_summary_pipeline.run()             # changed
-                    # If pipeline.run() returns successfully, break out
-                    break                                                  # changed
-                except Exception as e:
-                    # If last attempt, re-raise to outer except
-                    logging.warning(f"Attempt {attempt} failed for call_id={call_id} recording_url_id={recording_url_id}: {e}")  # changed
-                    if attempt >= max_attempts:
-                        raise
-                    # Exponential backoff before retrying
-                    backoff = 2 ** (attempt - 1)
-                    time.sleep(backoff)
+            # 🚀 NO RETRY HERE — central retry exists inside pipeline.run()
+            logging.info(f"Running summary pipeline for call_id={call_id}")
+            summary = self.call_summary_pipeline.run()
 
-            if summary is None or (isinstance(summary, str) and summary.strip() == ""):
+            if summary is None or summary.strip() == "":
                 raise ValueError("Summary was empty in run().")
 
             # update hubspot
-            # self.hubspot_client_obj.update_call_transcription(call_id, summary)
-            
-            #updating both summary and sentiment score
             self.hubspot_client_obj.update_summary_and_sentiment_score(call_id, summary)
-
-            # changed: Write success log with recording_url_id included
+            print("processed_count: ", self.count)
+            self.count+=1
+            # log success
             with open("logs/success_files.txt", "a") as f:
                 f.write(
                     f"[{datetime.now()}] call_id: {call_id} recording_url_id: {recording_url_id} Processed successfully.\n"
                 )
-
+                
             logging.info(f"[SUCCESS] call_id={call_id} recording_url_id={recording_url_id}")
             return f"[SUCCESS] {call_id}"
 
         except Exception as err:
-            # changed: Write failure log with recording_url_id included
+            # log failure
             with open("logs/failed_files.txt", "a") as f:
                 f.write(
                     f"[{datetime.now()}] call_id: {call_id} recording_url_id: {recording_url_id} error: {err}\n"
@@ -104,10 +89,9 @@ class Interface():
 
             logging.error(f"[FAILED] call_id={call_id} recording_url_id={recording_url_id} error={err}")
             return f"[FAILED] {call_id}: {err}"
-        
+
         finally:
-            # Don't remove file immediately so you can inspect in case of problems.
-            # If you want to remove, uncomment:
+            # safe file cleanup
             try:
                 os.remove(file_full_path)
             except Exception:
@@ -158,8 +142,10 @@ class Interface():
     def test_run(self):
         try:
             self.processed_ids = self.get_call_recording_ids_from_csv_obj.get_recording_url_id()
+            self.processed_ids = self.processed_ids[200: 350]
         
             print(self.processed_ids)
+
             call_recordings = []
             for id in self.processed_ids:
                 try:
@@ -180,7 +166,7 @@ class Interface():
             print(f"📞 Total calls to process: {len(call_recording_dict)}")
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=7) as executor:
+            with ThreadPoolExecutor(max_workers=5) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call, call_id, call_obj["recording_url"], call_obj.get("recording_url_id")
@@ -198,14 +184,6 @@ class Interface():
         except Exception as err:
             raise Exception(f"Unexpected error: {err}")
         
-        finally:
-            print("processed_id: ", self.processed_ids)
-            csv_path = "/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - recording url id.csv"
-            df = pd.read_csv(csv_path)
-            df["summary_updated"] = df["ID"].isin(self.processed_ids)
-            df.to_csv(csv_path, index=False)
-            print(f"[OK] CSV updated successfully")
-
 
 
 if __name__ == "__main__":
@@ -213,7 +191,7 @@ if __name__ == "__main__":
     logging.info(f"Started processing at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
     interface = Interface()
-    interface.run()
+    interface.test_run()
 
     end_time = datetime.now()
     duration = end_time - start_time

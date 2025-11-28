@@ -78,15 +78,11 @@ class GetRecordingUrlIdFromCsv:
     def __init__(self, file_path: str):
         self.df = self.pd.read_csv(file_path, dtype={"ID": str})
 
-    def get_recording_url_id(self, limit = 200):
+    def get_recording_url_id(self):
         done_df = self.df[self.df["Done"].str.upper() == "YES"]
     
         # Extract only the ID column
         ids = done_df["ID"].tolist()
-    
-        # Apply limit if provided
-        if limit is not None:
-            ids = ids[:limit]
     
         return ids
 

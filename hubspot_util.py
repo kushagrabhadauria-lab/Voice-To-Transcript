@@ -287,6 +287,11 @@ class HubSpotClient:
             print(f"[ERROR] Unable to get call_id obj for this recording_url_id : {err}")
 
 
+    def get_call_with_recording_url_and_company_name_of_this_day(self):
+        '''
+            call recording
+        '''
+
     def get_call_with_empty_summary_and_recording_url_id(self):
         from hubspot.crm.objects.calls.models import PublicObjectSearchRequest, Filter, FilterGroup
         try:        

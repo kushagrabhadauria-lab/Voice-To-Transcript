@@ -11,12 +11,18 @@ from google.genai.types import (
 from google.genai.types import UploadFileConfig
 import logging
 from dotenv import load_dotenv
+import threading
+import time
 
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
+
+pause_event = threading.Event()
+pause_event.set()  # initially threads can run
+retry_lock = threading.Lock()
 
 
 class AudioDownloader:
@@ -185,6 +191,52 @@ class CallSummaryGenerator:
         self.client = genai.Client(api_key=api_key)
         self.model_name = model_name
 
+
+    def call_gemini_with_retry(self, contents):
+        max_retries = 5
+        backoff = 1  # seconds
+
+        attempt = 0
+
+        while attempt < max_retries:
+            try:
+                pause_event.wait()   # Wait if system is paused
+
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=contents,
+                    config=GenerateContentConfig(temperature=0.2)
+                )
+                return response  # SUCCESS
+
+            except Exception as e:
+                if "503" in str(e):
+                    logging.warning(f"503 error… thread {threading.get_ident()} attempt={attempt+1}")
+
+                    # ONLY ONE THREAD HANDLES RETRIES
+                    if retry_lock.acquire(blocking=False):
+                        logging.warning("This thread is the RETRY MANAGER")
+
+                        pause_event.clear()  # stop all other threads
+                        time.sleep(backoff)
+
+                        backoff *= 2
+                        attempt += 1
+
+                        pause_event.set()    # allow threads after backoff
+                        retry_lock.release() # unlock so others go normally
+
+                    else:
+                        # Other threads only wait—not retry
+                        logging.warning(f"Thread {threading.get_ident()} waiting during retry...")
+                        pause_event.wait()   # blocked until retry thread resumes
+
+                else:
+                    raise e  # some other exception → not retryable
+
+        raise RuntimeError("Gemini API returned 503 after 5 retries")
+
+
     def generate_summary(self, file_input, file_type):
         '''
             file_input:
@@ -215,11 +267,13 @@ class CallSummaryGenerator:
                 Part.from_text(text=self.FILTERED_SUMMARY_PROMPT),
             ]
 
-        response = model.generate_content(
-            model="gemini-2.5-flash",
-            contents=[Content(parts=parts)],
-            config=config
-        )
+        # response = model.generate_content(
+        #     model="gemini-2.5-flash",
+        #     contents=[Content(parts=parts)],
+        #     config=config
+        # )
+
+        response = self.call_gemini_with_retry([Content(parts=parts)])
 
         summary = response.text        
 
