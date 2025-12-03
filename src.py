@@ -191,7 +191,7 @@ if __name__ == "__main__":
     logging.info(f"Started processing at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
     interface = Interface()
-    interface.test_run()
+    interface.run()
 
     end_time = datetime.now()
     duration = end_time - start_time

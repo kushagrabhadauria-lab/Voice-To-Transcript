@@ -496,3 +496,8 @@
 [2025-11-28 09:43:37.466935] call_id: 233286887128 recording_url_id: 1761125977.199497 Processed successfully.
 [2025-11-28 09:43:38.492429] call_id: 233286991574 recording_url_id: 1761128196.221067 Processed successfully.
 [2025-11-28 09:43:42.074528] call_id: 233124384444 recording_url_id: 1761116234.100367 Processed successfully.
+[2025-12-01 11:05:29.701720] call_id: 254434857658 recording_url_id: None Processed successfully.
+[2025-12-01 15:11:32.081623] call_id: 254434857658 recording_url_id: None Processed successfully.
+[2025-12-01 15:16:36.193433] call_id: 250250065629 recording_url_id: None Processed successfully.
+[2025-12-01 15:19:14.395648] call_id: 250250065629 recording_url_id: None Processed successfully.
+[2025-12-01 15:21:40.932188] call_id: 254434857658 recording_url_id: None Processed successfully.

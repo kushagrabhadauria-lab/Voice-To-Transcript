@@ -62,3 +62,5 @@ HTTP response headers: HTTPHeaderDict({'Date': 'Wed, 26 Nov 2025 07:00:20 GMT', 
 HTTP response body: {"status":"error","message":"Property values were not valid: [{\"isValid\":false,\"message\":\"Property \\\"sentiment_score\\\" does not exist\",\"error\":\"PROPERTY_DOESNT_EXIST\",\"name\":\"sentiment_score\",\"localizedErrorMessage\":\"Property \\\"sentiment_score\\\" does not exist\",\"portalId\":244289680}]","correlationId":"76fab190-bd43-49eb-ae77-c992a095e9f2","errors":[{"message":"Property \"sentiment_score\" does not exist","code":"PROPERTY_DOESNT_EXIST","context":{"propertyName":["sentiment_score"]}}],"category":"VALIDATION_ERROR"}
 
 [2025-11-28 09:30:36.015483] call_id: 247441166033 recording_url_id: 1762172946.116665 error: Empty summary after retry.
+[2025-12-01 11:04:57.381462] call_id: 1762321138.163462 error: 'NoneType' object is not subscriptable
+[2025-12-01 11:04:58.099243] call_id: 1762322816.168007 error: 'NoneType' object is not subscriptable
