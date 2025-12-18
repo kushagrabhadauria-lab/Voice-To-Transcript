@@ -274,7 +274,7 @@ class HubSpotClient:
 
             search_request = PublicObjectSearchRequest(
                 filter_groups=[filter_group],
-                properties=["recording_url_id", "hs_call_recording_url", "hs_call_start_time"]
+                properties=["recording_url_id", "hs_call_recording_url", "hs_call_start_time", "model_to_hb_transaction", "sentiment_score"]
             )
 
             results = self.client.crm.objects.calls.search_api.do_search(
@@ -289,21 +289,20 @@ class HubSpotClient:
 
     def get_call_with_recording_url_and_company_name_today(self):
         """
-            Fetch calls from today that:
-            - have recording_url
-            - do NOT have summary
-            - have an associated company
+        Fetch calls from the last 24 hours (rolling window) that:
+        - have recording_url
+        - do NOT have summary
+        - have an associated company
         """
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone, timedelta
         from hubspot.crm.objects.calls import PublicObjectSearchRequest
 
         try:
-            # Today's timestamp (UTC)
             now = datetime.now(timezone.utc)
-            start_of_day = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-            start_ms = int(start_of_day.timestamp() * 1000)
+            start_24h_ago = now - timedelta(hours=24)
 
-            # Filters (NO company filter here — associations can't be filtered)
+            start_ms = str(int(start_24h_ago.timestamp() * 1000))
+
             filter_groups = [
                 {
                     "filters": [
@@ -320,11 +319,11 @@ class HubSpotClient:
                             "propertyName": "model_to_hb_transcription",
                             "operator": "NOT_HAS_PROPERTY"
                         },
-                        # {
-                        #     "propertyName": "hs_call_duration",
-                        #     "operator": "GTE",
-                        #     "value": 300000
-                        # }
+                        {
+                            "propertyName": "hs_call_duration",
+                            "operator": "GTE",
+                            "value": "30000"  # 30 seconds (ms)
+                        }
                     ]
                 }
             ]
@@ -333,62 +332,76 @@ class HubSpotClient:
                 "hs_call_recording_url",
                 "model_to_hb_transcription",
                 "hs_timestamp",
-                "hs_company_name",
                 "hs_call_duration"
             ]
 
-            search_request = PublicObjectSearchRequest(
-                filter_groups=filter_groups,
-                properties=properties,
-                limit=200
-            )
-
-            response = self.client.crm.objects.calls.search_api.do_search(
-                public_object_search_request=search_request
-            )
-                      
             final_results = []
-            # print("response: ", response.results[0])
-            # return
-            for call in response.results:
-                call_id = call.id
+            after = None
+            count = 1
 
-                associations = self.client.crm.associations.v4.basic_api.get_page(
-                    "calls",          # from_object_type
-                    call_id,          # from_object_id
-                    "companies"       # to_object_type
+            while True:
+                print("count: ", count)
+                count+=1
+                search_request = PublicObjectSearchRequest(
+                    filter_groups=filter_groups,
+                    properties=properties,
+                    limit=20,   # HubSpot hard limit
+                    after=after
                 )
 
-                if not associations.results:
-                    # No associated company → skip this call
-                    continue
-
-                # Take the first associated company
-                company_id = associations.results[0].to_object_id
-
-                # Fetch company details (especially name)
-                company_obj = self.client.crm.companies.basic_api.get_by_id(
-                    company_id,
-                    properties=["name"]
+                response = self.client.crm.objects.calls.search_api.do_search(
+                    public_object_search_request=search_request
                 )
 
-                final_results.append({
-                    "call_id": call_id,
-                    "recording_url": call.properties.get("hs_call_recording_url"),
-                    "company_name": company_obj.properties.get("name"),
-                    "summary": call.properties.get("model_to_hb_transcription"),
-                    "timestamp": call.properties.get("hs_timestamp"),
-                    "call_duration": call.properties.get("hs_call_duration")
-                })
-
-                if len(final_results) == 2:
+                # print("response: ", response.results[0])
+                if not response.results:
                     break
 
-            print("result_len: ", len(final_results))
+                for call in response.results:
+                    call_id = call.id
+
+                    associations = self.client.crm.associations.v4.basic_api.get_page(
+                        "calls",
+                        call_id,
+                        "companies"
+                    )
+
+                    if not associations.results:
+                        continue
+
+                    company_id = associations.results[0].to_object_id
+
+                    company_obj = self.client.crm.companies.basic_api.get_by_id(
+                        company_id,
+                        properties=["name"]
+                    )
+                    print({
+                        "call_id": call_id,
+                        "company_name": company_obj.properties.get("name"),
+                        "timestamp": call.properties.get("hs_timestamp"),
+                        "call_duration": call.properties.get("hs_call_duration")
+                    })
+
+                    final_results.append({
+                        "call_id": call_id,
+                        "recording_url": call.properties.get("hs_call_recording_url"),
+                        "company_name": company_obj.properties.get("name"),
+                        "summary": call.properties.get("model_to_hb_transcription"),
+                        "timestamp": call.properties.get("hs_timestamp"),
+                        "call_duration": call.properties.get("hs_call_duration")
+                    })
+
+                # Pagination check
+                if response.paging and response.paging.next:
+                    after = response.paging.next.after
+                else:
+                    break
+
+            print("total calls fetched:", len(final_results))
             return final_results
 
         except Exception as err:
-            print(f"[ERROR] Unable to get calls for today: {err}")
+            print(f"[ERROR] Unable to get calls for last 24 hours: {err}")
             return None
 
 
@@ -428,11 +441,38 @@ class HubSpotClient:
         except Exception as err:
             print(f"[ERROR] Unable to get call_id obj for this recording_url_id : {err}")
 
+    
+    def get_call_by_id(self, call_id: str):
+        """
+            Fetch a single call object from HubSpot using call_id.
+        """
+        try:
+            call_obj = self.client.crm.objects.calls.basic_api.get_by_id(
+                call_id,
+                properties=[
+                    "hs_call_recording_url",
+                    "recording_url_id",
+                    "hs_call_start_time",
+                    "model_to_hb_transcription",
+                    "sentiment_score"
+                ]
+            )
+
+            return call_obj
+
+        except Exception as err:
+            print(f"[ERROR] Unable to fetch call for call_id={call_id}: {err}")
+            return None
+
+
 if __name__ == "__main__":
     hubspot_client = HubSpotClient(HUBSPOT_TOKEN)
 
+    # for call_id in ["282969248463", "283215137471", "283110276796", "283222715127"]:
+    for call_id in ["283234131686", "283260662491"]:
+        print(hubspot_client.get_call_by_id(call_id))
 
-    print(hubspot_client.get_call_with_recording_url_and_company_name_today())
+    # print(hubspot_client.get_call_with_recording_url_and_company_name_today())
     # sentiment_score_extractor_obj = SentimentScoreExtractor()
     # url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
     # url_ids = url_id_obj.get_recording_url_id()
@@ -447,7 +487,7 @@ if __name__ == "__main__":
     #     if rating:
     #         rating = int(rating)
     #         print(count, "url_id: ", url_id)
-    #         count+=1
+    #         count+=1b
     #         call_id = call_data.id
     #         hubspot_client.update_sentiment_score(call_id, rating)
     #         with open("logs/success_files.txt", "a") as f:

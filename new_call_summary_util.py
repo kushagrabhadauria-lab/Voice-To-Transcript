@@ -1,8 +1,9 @@
 import os
 import time
 import requests
+import json
+import random # Added for jitter in backoff
 from datetime import datetime
-from google import genai
 from google.genai.types import (
     GenerateContentConfig,
     Part,
@@ -10,9 +11,8 @@ from google.genai.types import (
 )
 from google.genai.types import UploadFileConfig
 import logging
-from dotenv import load_dotenv
 import threading
-import time
+
 
 
 logging.basicConfig(
@@ -36,7 +36,17 @@ class AudioDownloader:
 
     
     def download(self, filename="recording.mp3"):
-        logging.info("📥 Downloading recording...")
+        logging.info("Downloading recording...")
+        
+        # Ensure 'temp' directory exists
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+        # Use datetime for unique filename if URL is provided
+        if self.url:
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"recording_{timestamp}.mp3"
+
         response = requests.get(self.url, timeout=60)
         response.raise_for_status()
 
@@ -45,17 +55,17 @@ class AudioDownloader:
             f.write(response.content)
 
         size_mb = len(response.content) / (1024 * 1024)
-        logging.info(f"✅ Downloaded {size_mb:.2f} MB to {file_path}")
+        logging.info(f"Downloaded {size_mb:.2f} MB to {file_path}")
         return file_path
 
 
-
+# --- CLASS UPDATED: Accepts client object instead of api_key ---
 class GeminiFileManager:
 
     SMALL_FILE_LIMIT_MB = 20.0
 
-    def __init__(self, api_key):
-        self.client = genai.Client(api_key=api_key)
+    def __init__(self, client): # <-- Changed from api_key
+        self.client = client # <-- Use the authenticated client
 
     def is_small_file(self, file_path):
         '''helper function to check if file is less than LIMIT.'''
@@ -77,6 +87,7 @@ class GeminiFileManager:
         
         except Exception as err:
             logging.error(f"Failed to upload audio: {err}")
+            raise # Re-raise error for pipeline to catch
 
     
     def upload_large_file(self, file_path):
@@ -92,8 +103,9 @@ class GeminiFileManager:
         
         except Exception as err:
             logging.error(f"Failed to upload audio: {err}")
-    
+            raise
 
+    
     def prepare_file(self, file_path):
         try:
             '''Return Part obj or file_obj according to file size'''
@@ -104,30 +116,10 @@ class GeminiFileManager:
                 return self.upload_large_file(file_path), "large"
             
         except Exception as err:
-            raise(f"[ERROR] cannot upload file : {err}")
+            raise RuntimeError(f"[ERROR] cannot upload file : {err}")
         
 
 
-    def upload_file(self, file_path, mime_type="audio/mpeg", display_name="Call Recording"):
-        logging.info("Uploading audio to Gemini...")
-        try:
-            config = UploadFileConfig(
-                mime_type=mime_type,
-                display_name=display_name
-            )
-
-            file_obj = self.client.files.upload(
-                file=file_path,
-                config=config
-            )
-            logging.info(f"Uploaded successfully: {file_obj.name}")
-            return file_obj
-
-        except Exception as e:
-            logging.error(f"Failed to upload audio: {e}")
-            raise
-
-    
     def wait_until_ready(self, file_obj):
         logging.info("Waiting for file to process...")
         while True:
@@ -141,11 +133,11 @@ class GeminiFileManager:
     def delete_file(self, file_name):
         try:
             self.client.files.delete(name = file_name)
-            logging.info(f"🧹 Deleted remote file: {file_name}")
+            logging.info(f"Deleted remote file: {file_name}")
         except Exception as e:
-            logging.warning(f"Could not delete file: {e}")
+            logging.warning(f"Could not delete remote file {file_name}: {e}")
 
-
+# --- CLASS UPDATED: Accepts client object instead of api_key ---
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT = """
         You are an expert call analyst. Based on this call recording, provide ONLY the following sections:
@@ -187,68 +179,61 @@ class CallSummaryGenerator:
          ⚠️ Ensure accurate identification of agent vs customer.
     """
 
-    def __init__(self, api_key, model_name="gemini-2.5-flash"):
-        self.client = genai.Client(api_key=api_key)
+    def __init__(self, client, model_name="gemini-2.5-flash"): 
+        self.client = client 
         self.model_name = model_name
 
 
     def call_gemini_with_retry(self, contents):
         max_retries = 5
-        backoff = 1  # seconds
+        base_backoff = 1 
 
         attempt = 0
 
         while attempt < max_retries:
             try:
-                pause_event.wait()   # Wait if system is paused
-
+                pause_event.wait() 
                 response = self.client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=contents,
                     config=GenerateContentConfig(temperature=0.2)
                 )
-                return response  # SUCCESS
+
+                return response
 
             except Exception as e:
-                if "503" in str(e):
-                    logging.warning(f"503 error… thread {threading.get_ident()} attempt={attempt+1}")
+                # Check for transient errors (503 Service Unavailable, 429 Rate Limit)
+                if "503" in str(e) or "429" in str(e):
+                    logging.warning(f"Transient error (503/429) caught: {e}. Thread {threading.get_ident()} attempt={attempt+1}")
 
-                    # ONLY ONE THREAD HANDLES RETRIES
                     if retry_lock.acquire(blocking=False):
-                        logging.warning("This thread is the RETRY MANAGER")
-
-                        pause_event.clear()  # stop all other threads
-                        time.sleep(backoff)
-
-                        backoff *= 2
-                        attempt += 1
-
-                        pause_event.set()    # allow threads after backoff
-                        retry_lock.release() # unlock so others go normally
-
+                        logging.warning("This thread is the RETRY MANAGER. Pausing others.")
+                        
+                        try:
+                            pause_event.clear()  
+                            # Exponential backoff with Jitter
+                            wait_time = min(60, (base_backoff * (2 ** attempt)) + random.uniform(0, 1))
+                            logging.info(f"Retrying in {wait_time:.2f} seconds...")
+                            time.sleep(wait_time)
+                            attempt += 1
+                            pause_event.set()    
+                        finally:
+                            retry_lock.release()
                     else:
-                        # Other threads only wait—not retry
                         logging.warning(f"Thread {threading.get_ident()} waiting during retry...")
-                        pause_event.wait()   # blocked until retry thread resumes
-
+                        pause_event.wait()
                 else:
-                    raise e  # some other exception → not retryable
+                    # Non-retryable exception
+                    raise e
 
-        raise RuntimeError("Gemini API returned 503 after 5 retries")
+        raise RuntimeError(f"Gemini API returned transient error after {max_retries} retries.")
 
 
     def generate_summary(self, file_input, file_type):
         '''
-            file_input:
-                - SMALL FILE → Part object (Part.from_bytes)
-                - LARGE FILE → file_info object returned from Gemini after upload
-            file_type: "small" or "large"
-
+            Generates summary using the file input.
         '''
         logging.info("Generating filtered call summary...")
-        logging.info(f"DEBUG: Part.from_text type: {type(Part.from_text)}")
-        logging.info(f"DEBUG: Part.from_text type: {type(Part.from_uri)}")
-
         if file_type == "large":
             # file_input is a Gemini file_info object
             parts = [
@@ -264,15 +249,7 @@ class CallSummaryGenerator:
                 file_input,
                 Part.from_text(text=self.FILTERED_SUMMARY_PROMPT),
             ]
-
-        # response = model.generate_content(
-        #     model="gemini-2.5-flash",
-        #     contents=[Content(parts=parts)],
-        #     config=config
-        # )
-
-        response = self.call_gemini_with_retry([Content(parts=parts)])
-
+        response = self.call_gemini_with_retry([Content(parts=parts, role="user")])
         summary = response.text        
 
         if not summary:
@@ -282,14 +259,22 @@ class CallSummaryGenerator:
         return summary.strip()
 
 
+# --- CLASS UPDATED: Added Service Account Logic and Cleanup ---
 class CallSummaryPipeline:
-    def __init__(self, api_key, recording_url=None, file_path=None):
-        self.api_key = api_key
+    
+    # Removed api_key from __init__
+    def __init__(self, gcp_client, recording_url=None, file_path=None):
+        # 1. AUTHENTICATE AND CREATE CLIENT
+        self.client = gcp_client
+        
+        # 2. INITIALIZE SUB-CLASSES WITH THE CLIENT
         self.recording_url = recording_url
         self.file_path = None
         self.downloader = AudioDownloader(recording_url)
-        self.manager = GeminiFileManager(api_key)
-        self.generator = CallSummaryGenerator(api_key)
+        # Pass the authenticated client
+        self.manager = GeminiFileManager(self.client) 
+        self.generator = CallSummaryGenerator(self.client)
+
 
 
     def set_file_path(self, file_path):
@@ -297,54 +282,84 @@ class CallSummaryPipeline:
 
     def run(self):
         audio_path = None
+        file_name_to_delete = None
+        
         try:
             logging.info("Starting filtered call summary extraction...")
             if not self.file_path and not self.recording_url:
                 logging.error("Please provide file_path or recording_url")
                 return None
             
+            # 1. Audio Download/Path Setup
             if self.recording_url:
-                audio_path = self.downloader.download()
-
+                audio_path = self.downloader.download() 
             else:
                 audio_path = self.file_path
 
-
+            # 2. File Preparation (Upload or Part Creation)
             file_obj_or_part, file_type = self.manager.prepare_file(audio_path)
             
-            # if file_type "large"
             if file_type == "large":
+                # Wait for processing and capture the remote file name for cleanup
                 file_obj_or_part = self.manager.wait_until_ready(file_obj_or_part)
+                file_name_to_delete = file_obj_or_part.name
 
-            #generate summary
-
+            # 3. Generate Summary
             summary = self.generator.generate_summary(file_obj_or_part, file_type)
             logging.info(f"Length: {len(summary)} characters")
             return summary
 
         except Exception as e:
-            logging.error(f"Error: {e}")
+            logging.error(f"Pipeline Error: {e}")
             raise
-        
 
+        finally:
+            # 4. CLEANUP
+            # Delete the remote file if it was a large upload
+            if file_name_to_delete:
+                self.manager.delete_file(file_name_to_delete)
+            
+            # Delete the local downloaded file if the URL was provided
+            # Only delete if we performed the download (i.e., recording_url was set)
+            if self.recording_url and audio_path and os.path.exists(audio_path):
+                try:
+                    os.remove(audio_path)
+                    logging.info(f"Deleted local file: {audio_path}")
+                except Exception as e:
+                    logging.warning(f"Could not delete local file {audio_path}: {e}")
+# -----------------------------------------------------------
 
 
 if __name__ == "__main__":
-    load_dotenv()
-    GEMINI_KEY = os.getenv("GEMINI_KEY")
-    RECORDING_URL = None
-    FILE_PATH = os.getcwd()+"/downloads/call_19.mp3"
+    
+    # NOTE: .env and GEMINI_KEY are no longer needed
+    
+    RECORDING_URL = None # Set to None if using local file
+    # Use an existing local file if RECORDING_URL is None
+    FILE_PATH = os.getcwd()+"/downloads/test.mp3" 
+
+    if RECORDING_URL is None and not os.path.exists(FILE_PATH):
+        logging.error(f"FATAL: Local file not found at {FILE_PATH}. Please check the path or provide a URL.")
+        exit(1)
+
 
     start_time = datetime.now()
     logging.info(f"Started processing at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL)
-    pipeline.set_file_path(FILE_PATH)
-    summary = pipeline.run()
+    try:
+        # Initialize pipeline without API Key
+        pipeline = CallSummaryPipeline(RECORDING_URL) 
+        if RECORDING_URL is None:
+             pipeline.set_file_path(FILE_PATH)
+             
+        summary = pipeline.run()
 
-    end_time = datetime.now()
-    duration = end_time - start_time
+        end_time = datetime.now()
+        duration = end_time - start_time
 
-    logging.info(f"Finished processing at: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    logging.info(f"Total time taken: {duration.total_seconds():.2f} seconds")
-
+        logging.info(f"\n--- GENERATED SUMMARY ---\n{summary}\n-------------------------")
+        logging.info(f"Finished processing at: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        logging.info(f"Total time taken: {duration.total_seconds():.2f} seconds")
+    
+    except Exception as e:
+        logging.error(f"Pipeline failed: {e}")

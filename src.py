@@ -1,14 +1,14 @@
 import os
 import pandas as pd
 from hubspot_util import HubSpotClient
-from call_summary_util import CallSummaryPipeline
+from new_call_summary_util import CallSummaryPipeline as vertex_ai_call_summary_pipeline
 from helper_functions import DownloadFromDrive, AudioDownloader, GetRecordingUrlIdFromCsv
 from global_variables import EnviromentVariable
 from dotenv import load_dotenv
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
-import time
+from secret_manager_util import GcpConfig
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,16 +26,18 @@ class Interface():
         # changed: ensure downloads path ends with slash and exists
         self.file_path = os.path.join(os.getcwd(), "downloads") + os.sep  # changed
         os.makedirs(self.file_path, exist_ok=True)                       # changed
-
+        logging.info("Gcp Authentication Initiated!")
+        self.gcp_client_obj = GcpConfig()._create_authenticated_client() 
+        logging.info("Gcp authentication completed!")
         self.hubspot_token = EnviromentVariable.HUBSPOT_TOKEN
         self.output_dir = EnviromentVariable.OUTPUT_DIR
-        self.gemini_key = EnviromentVariable.GEMINI_KEY
         self.hubspot_client_obj = HubSpotClient(self.hubspot_token)
-        self.call_summary_pipeline = CallSummaryPipeline(self.gemini_key)
+        # self.call_summary_pipeline = CallSummaryPipeline(self.gemini_key)
+        self.call_summary_pipeline = vertex_ai_call_summary_pipeline(self.gcp_client_obj)
         self.download_from_drive_obj = DownloadFromDrive()
         self.download_audio_obj = AudioDownloader()
         # If you need CSV helper in test_run, uncomment and set correct path:
-        self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - New 500 Urls.csv")
+        # self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - New 500 Urls.csv")
 
         self.processed_ids = []
         self.count = 1
@@ -69,8 +71,6 @@ class Interface():
 
             # update hubspot
             self.hubspot_client_obj.update_summary_and_sentiment_score(call_id, summary)
-            print("processed_count: ", self.count)
-            self.count+=1
             # log success
             with open("logs/success_files.txt", "a") as f:
                 f.write(
@@ -102,11 +102,11 @@ class Interface():
     def run(self):
         try:
             # call_recordings = self.hubspot_client_obj.get_call_with_empty_summary_and_recording_url_id()
-            call_recordings = self.hubspot_client_obj.get_calls_with_recordings()
+            call_recordings = self.hubspot_client_obj.get_call_with_recording_url_and_company_name_today()
             # changed: to store both recording url and recording_url_id in dict
             call_recording_dict = {
-                call.id: {
-                    "recording_url": call.properties.get("hs_call_recording_url"),
+                call["call_id"]: {
+                    "recording_url": call["recording_url"],
                     # "recording_url_id": call.properties.get("recording_url_id") or call.properties.get("recording_url_id", None)
                 }
                 for call in call_recordings
@@ -116,13 +116,14 @@ class Interface():
             call_processed_count = 1
             # ---------- THREADING STARTS HERE ----------
             results = []
-            with ThreadPoolExecutor(max_workers=1) as executor:
+
+            with ThreadPoolExecutor(max_workers=5) as executor:
                 future_map = {
                     executor.submit(
                         self.process_single_call,
                         call_id,
                         call_obj["recording_url"],
-                        call_obj.get("recording_url_id")
+                        call_obj.get("recording_url_id", None)
                     ): call_id
                     for call_id, call_obj in call_recording_dict.items()
                 }
@@ -138,7 +139,8 @@ class Interface():
 
         except Exception as err:
             raise Exception(f"Unexpected error: {err}")
-        
+
+
     def test_run(self):
         try:
             self.processed_ids = self.get_call_recording_ids_from_csv_obj.get_recording_url_id()
