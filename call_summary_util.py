@@ -148,43 +148,86 @@ class GeminiFileManager:
 
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT = """
-        You are an expert call analyst. Based on this call recording, provide ONLY the following sections:
+       # ROLE
+        You are an expert Call Quality Analyst specializing in Customer Satisfaction (CSAT) and Agent Performance.
 
-         1️⃣ CALL TYPE
-         - Call Type: (Inbound/Outbound, Support/Sales/Complaint/Inquiry)
-         - Primary Language(s):
+        # TASK
+        Analyze the provided call recording and generate a comprehensive CSAT report. You must provide evidence for every score given.
 
-         2️⃣ OVERALL OUTCOME
-         - Overall Outcome: (Resolved/Unresolved/Follow-up needed/Escalated)
+        # ANALYSIS GUIDELINES
+        - OBJECTIVITY: Score based on explicit verbal cues and outcomes, not assumptions.
+        - DIFFERENTIATION: Clearly identify the CUSTOMER and the AGENT.
+        - EVIDENCE-BASED: For every score, provide a specific quote or reference from the call.
+        - SCORING: Strictly follow the 0–10 scale. Use decimals (e.g., 7.5) if necessary for nuance.
 
-         3️⃣ PARTICIPANTS
-         For each speaker:
-         - Name/Role: [exact name from intro or within the call]
-         - Communication Style:
-         - Key Characteristics:
+        # SCORING FRAMEWORK
+        
+        1. ISSUE RESOLUTION STATUS (30%)
+        - 9–10: Issue fully resolved; no further action needed.
+        - 6–8: Partial resolution; clear follow-up path established.
+        - 2–5: Unresolved; vague next steps; customer left confused.
+        - 0–1: No resolution; customer requested escalation or refund.
 
-         4️⃣ CALL PURPOSE & TOPIC
-         - Main reason for call:
-         - Customer’s concern/request:
-         - Related issues discussed:
+        2. CUSTOMER SENTIMENT TRAJECTORY (10%)
+        - 9–10: Negative/Neutral start -> Strong Positive/Appreciative end.
+        - 6–8: Negative start -> Neutral/Calm end.
+        - 2–5: Negative start -> Negative/Aggravated end (or worsened).
 
-         5️⃣ RESOLUTION STATUS
-         - Was the issue resolved: Yes/No/Partial
-         - Customer Satisfaction Rating: [X/10]
-         - Satisfaction Reasoning:
-           * Initial tone
-           * Emotional changes
-           * Satisfaction indicators
-           * End tone
+        3. CUSTOMER TRUST & CONFIDENCE (10%)
+        - 8–10: Customer explicitly thanks agent or confirms future business.
+        - 4–7: Customer is compliant but shows no high enthusiasm.
+        - 0–3: Customer expresses doubt, threatens to cancel, or asks for manager.
 
-         6️⃣ TONE & SENTIMENT ANALYSIS
-         - Customer emotion: Beginning → End
-         - Agent approach:
-         - Interaction quality:
-         - Escalation points:
+        4. AGENT HANDLING QUALITY (30%)
+        - 8–10: High empathy, active listening, clear technical explanations.
+        - 5–7: Professional and polite, but lacked deep empathy or struggled with technicals.
+        - 0–4: Defensive, rude, interrupted the customer, or provided incorrect info.
 
-         ⚠️ DO NOT include anything else.
-         ⚠️ Ensure accurate identification of agent vs customer.
+        5. CLOSURE QUALITY (20%)
+        - 8–10: Clear summary of action items; polite sign-off; customer satisfied with end.
+        - 4–7: Standard sign-off; no summary of next steps.
+        - 0–3: Call cut off abruptly or customer ended the call in anger.
+
+        # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
+
+        ## 1. CALL OVERVIEW
+        - **Call Type:** [Inbound/Outbound] | [Support/Sales/Complaint]
+        - **Language:** - **Outcome:** [Resolved/Unresolved/Escalated]
+
+        ## 2. PARTICIPANTS
+        - **Agent:** [Name/Role] | [Style: e.g., Patient, Authoritative, Passive]
+        - **Customer:** [Name] | [Style: e.g., Frustrated, Tech-savvy, Distressed]
+
+        ## 3. CALL PURPOSE & KEY TOPICS
+        - **Main reason for call:**
+        - **Customer’s concern/request:**
+        - **Related issues discussed:**
+
+        ## 4. CSAT SCORECARD
+            a) **ISSUE RESOLUTION ASSESSMENT**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            b) **CUSTOMER SENTIMENT TRAJECTORY**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            c) **CUSTOMER TRUST & CONFIDENCE**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            d) **AGENT HANDLING QUALITY**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            e) **CLOSURE QUALITY**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+        ## 5. FINAL ASSESSMENT
+        - **Normalized CSAT (0–10):** [Weighted Average]
+        - **Executive Summary:** [3-sentence summary of why this score was given.]
+        - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
     """
 
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
@@ -332,7 +375,7 @@ class CallSummaryPipeline:
 if __name__ == "__main__":
     load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
-    RECORDING_URL = None
+    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=1763533443.265374&type=rec&token=cS9OT1lmS01vV2hhdlVBSWJpU2FlNVhycUsvRW9xNWcyNVJJNWpPUjFYdmNJeHRXZ1NIbUVyZjFLRDY3NkZXczo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
     FILE_PATH = os.getcwd()+"/downloads/call_19.mp3"
 
     start_time = datetime.now()
@@ -341,6 +384,8 @@ if __name__ == "__main__":
     pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL)
     pipeline.set_file_path(FILE_PATH)
     summary = pipeline.run()
+    with open("summary3.txt", "w") as f:
+        f.write(summary)
 
     end_time = datetime.now()
     duration = end_time - start_time
