@@ -140,43 +140,126 @@ class GeminiFileManager:
 # --- CLASS UPDATED: Accepts client object instead of api_key ---
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT = """
-        You are an expert call analyst. Based on this call recording, provide ONLY the following sections:
+        You are an expert call quality analyst.
 
-         1️⃣ CALL TYPE
-         - Call Type: (Inbound/Outbound, Support/Sales/Complaint/Inquiry)
-         - Primary Language(s):
+        Analyze the provided call recording and generate a CUSTOMER SATISFACTION RATING using the scoring framework below.
 
-         2️⃣ OVERALL OUTCOME
-         - Overall Outcome: (Resolved/Unresolved/Follow-up needed/Escalated)
+        IMPORTANT RULES:
+        - Base your analysis ONLY on evidence from the call (transcript, tone, outcome).
+        - Clearly differentiate between CUSTOMER and AGENT.
+        - Be objective and conservative. Do NOT overestimate scores.
+        - Output ONLY the sections listed below.
+        - Scores must strictly follow the defined score guides.
+        - Final CSAT score must be normalized to a 0–10 scale.
 
-         3️⃣ PARTICIPANTS
-         For each speaker:
-         - Name/Role: [exact name from intro or within the call]
-         - Communication Style:
-         - Key Characteristics:
+        --------------------------------------------------
+        SCORING DIMENSIONS & WEIGHTS
+        --------------------------------------------------
 
-         4️⃣ CALL PURPOSE & TOPIC
-         - Main reason for call:
-         - Customer’s concern/request:
-         - Related issues discussed:
+        1) ISSUE RESOLUTION STATUS (Weight: 30%)
+        Measure:
+        - Was the customer’s primary issue resolved?
+        - Were clear next steps, ownership, and timeline provided?
 
-         5️⃣ RESOLUTION STATUS
-         - Was the issue resolved: Yes/No/Partial
-         - Customer Satisfaction Rating: [X/10]
-         - Satisfaction Reasoning:
-           * Initial tone
-           * Emotional changes
-           * Satisfaction indicators
-           * End tone
+        Score Guide:
+        - Fully resolved, no follow-up required → 9–10
+        - Partially resolved, clear next steps & timeline → 6–8
+        - Unresolved, vague or no timeline → 2–5
+        - No resolution, refund or escalation requested → 0–2
 
-         6️⃣ TONE & SENTIMENT ANALYSIS
-         - Customer emotion: Beginning → End
-         - Agent approach:
-         - Interaction quality:
-         - Escalation points:
+        --------------------------------------------------
 
-         ⚠️ DO NOT include anything else.
-         ⚠️ Ensure accurate identification of agent vs customer.
+        2) CUSTOMER SENTIMENT TRAJECTORY (Weight: 10%)
+        Measure:
+        - Customer emotional state at start vs end of call
+        - Direction of sentiment change
+
+        Score Guide:
+        - Negative → Positive → 9–10
+        - Negative → Neutral → 6–8
+        - Negative → More Negative → 2–5
+
+        --------------------------------------------------
+
+        3) CUSTOMER TRUST & CONFIDENCE SIGNALS (Weight: 10%)
+        Measure:
+        - Expressions of trust in company or agent
+        - Willingness to continue, recommend, or stay engaged
+
+        Score Guide:
+        - Explicit trust / future business intent → 8–10
+        - Neutral or cautious trust → 4–7
+        - Loss of trust, refund request, reputational risk → 0–3
+
+        --------------------------------------------------
+
+        4) AGENT HANDLING QUALITY (Weight: 30%)
+        Measure:
+        - Empathy, professionalism, clarity
+        - Ability to explain issues and de-escalate
+
+        Score Guide:
+        - Empathetic, confident, de-escalates → 8–10
+        - Professional but limited control → 5–7
+        - Defensive, unclear, escalates tension → 0–4
+
+        --------------------------------------------------
+
+        5) CLOSURE QUALITY & CALL ENDING (Weight: 20%)
+        Measure:
+        - Emotional state at call end
+        - Customer acceptance of next steps
+
+        Score Guide:
+        - Positive closure, reassurance → 8–10
+        - Neutral acceptance → 4–7
+        - Forced acceptance or lingering anger → 0–3
+
+        --------------------------------------------------
+        OUTPUT FORMAT (STRICT)
+        --------------------------------------------------
+
+        1️⃣ CALL TYPE
+        - Call Type: (Inbound / Outbound, Support / Sales / Complaint / Inquiry)
+        - Primary Language(s):
+
+        2️⃣ OVERALL OUTCOME
+        - Overall Outcome: (Resolved / Unresolved / Follow-up Needed / Escalated)
+
+        3️⃣ PARTICIPANTS
+        For each speaker:
+        - Name / Role: (exact name from call if mentioned)
+        - Communication Style:
+        - Key Characteristics:
+
+        4️⃣ CALL PURPOSE & TOPIC
+        - Main reason for call:
+        - Customer’s concern/request:
+        - Related issues discussed:
+
+        5️⃣ FINAL CUSTOMER SATISFACTION RATING
+
+        a) ISSUE RESOLUTION ASSESSMENT  
+        - Score (0–10) and brief evidence-based justification (one line)
+
+        b) CUSTOMER SENTIMENT TRAJECTORY  
+        - Score (0–10) and brief evidence-based justification (one line)
+
+        c) CUSTOMER TRUST & CONFIDENCE  
+        - Score (0–10) and brief evidence-based justification (one line)
+
+        d) AGENT HANDLING QUALITY  
+        - Score (0–10) and brief evidence-based justification (one line)
+
+        e) CLOSURE QUALITY  
+        - Score (0–10) and brief evidence-based justification (one line)
+
+        - Final CSAT Score (0–10):
+        - Final CSAT Reasoning (concise, evidence-based):
+
+        ⚠️ Do NOT add any sections outside this structure.
+        ⚠️ Do NOT include assumptions not supported by the call.
+        ⚠️ Ensure all scores strictly follow the defined score guides.
     """
 
     def __init__(self, client, model_name="gemini-2.5-flash"): 
@@ -334,7 +417,7 @@ if __name__ == "__main__":
     
     # NOTE: .env and GEMINI_KEY are no longer needed
     
-    RECORDING_URL = None # Set to None if using local file
+    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=1763533443.265374&type=rec&token=cS9OT1lmS01vV2hhdlVBSWJpU2FlNVhycUsvRW9xNWcyNVJJNWpPUjFYdmNJeHRXZ1NIbUVyZjFLRDY3NkZXczo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D" # Set to None if using local file
     # Use an existing local file if RECORDING_URL is None
     FILE_PATH = os.getcwd()+"/downloads/test.mp3" 
 
@@ -352,8 +435,8 @@ if __name__ == "__main__":
         if RECORDING_URL is None:
              pipeline.set_file_path(FILE_PATH)
              
-        summary = pipeline.run()
-
+        summary = pipeline.run(recording_url=RECORDING_URL)
+        print("summary: ", summary)
         end_time = datetime.now()
         duration = end_time - start_time
 

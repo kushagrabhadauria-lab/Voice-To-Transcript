@@ -1,0 +1,32 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Inbound | Support/Complaint
+- **Language:** Hindi
+- **Outcome:** Partially Resolved (with a clear follow-up path)
+
+## 2. PARTICIPANTS
+- **Agent:** Male voice | Style: Professional, Explanatory, Empathetic
+- **Customer:** Prince | Style: Frustrated, Demanding, Hesitant
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Primary Concern:** Customer's service plan is expiring, and he wants to continue on a monthly payment basis, also expressing dissatisfaction with past service quality and financial losses due to price mismatches.
+- **Technical/Secondary Issues:**
+    - Past delays in account access and manager allocation.
+    - Issues with listing sheet processing and perceived lack of attention from the company.
+    - Financial loss due to a price mismatch on a product.
+    - Agent's explanation of company policy regarding monthly plans (not possible) and pricing structure.
+    - Agent's offer of an extended plan (3 months + 15 days) and an optimization-only plan as alternatives.
+    - Customer's desire to evaluate sales performance for a month before committing to a longer plan.
+
+## 4. CSAT SCORECARD
+| Category | Score | Brief Justification (Evidence) |
+| :--- | :--- | :--- |
+| Issue Resolution | 6/10 | The customer's primary request for a monthly payment plan was denied ("नहीं नहीं सर मंथली वाला... वो हमारे पास एप्लीकेबल ही नहीं है सर" - 5:18-5:28). The agent offered an alternative (3 months + 15 days extension - 7:42-7:45) and an optimization-only plan (10:47-11:11), but the customer was still hesitant to commit to the 3-month plan without seeing short-term results ("थ्री मंथ थ्री मंथ वाला ना सर ये ज्यादा हो गया... एक एक महीने कुछ देखूंगा" - 10:03-10:16). A follow-up call was scheduled to finalize the decision. |
+| Sentiment Trajectory | 7/10 | The customer started with clear frustration about past issues and the need to even have this discussion ("मेरे को बोलने की जरूरत ही नहीं पड़नी चाहिए थी" - 0:43-0:44; "पर वो ये है थोड़ा सा पहले से ध्यान देते तो हमारे पास तीन मंथ थे अभी तक ना सारी लिस्टिंग हो जाती" - 1:41-1:45). By the end, while not fully satisfied with the proposed solution, he agreed to consider it and schedule a follow-up, indicating a shift to a more neutral and compliant state ("चलिए ठीक है सर मैं आपको ना एक से पहले पहले ही कॉल करता हूं" - 13:51-13:53). |
+| Trust & Confidence | 5/10 | The customer expressed a lack of trust in past processes ("मुझे लगा जैसे-जैसे मैं बता रहा हूं वैसे होती जा रही है ये चीजें पर वैसे हो नहीं रही थी ना दिक्कत आ गई।" - 2:16-2:21). He was hesitant to commit to a 3-month plan, stating he needed to see sales performance first ("थ्री मंथ थ्री मंथ वाला ना सर ये ज्यादा हो गया... एक एक महीने कुछ देखूंगा कि सेल्स का कैसा काम हो रहा है कैसा नहीं फिर उसके बाद कंटिन्यू कर पाऊंगा।" - 10:03-10:16). This indicates compliance but not strong enthusiasm or immediate trust in the long-term commitment. |
+| Agent Quality | 9/10 | The agent demonstrated high empathy and active listening by acknowledging past company shortcomings ("थोड़ा हमारी साइड से लैग हुआ है कि शायद आप पहले ही हमारी कॉल हो जाती तो ऐसे इशू नहीं होता।" - 1:12-1:16). He provided clear technical explanations for why monthly plans are not feasible due to costing and company structure ("मंथली और पार्शियली... वो हमारे पास एप्लीकेबल ही नहीं है सर" - 5:18-5:28; "क्योंकि वो फिर प्लान ही हमें कॉस्टली करने पड़ जाएंगे" - 6:58-7:00). He remained professional and offered concrete alternatives (3 months + 15 days extension, optimization plan). |
+| Closure Quality | 8/10 | The agent ensured a clear next step by asking the customer to confirm a decision date ("आप मुझे डेट बता दो कितने तारीख को आप मुझे इन्फॉर्म कर दोगे" - 12:25-12:28). Both parties agreed on the follow-up plan and ended the call politely, with the customer stating he would call back before the agreed-upon date ("चलिए ठीक है सर मैं आपको ना एक से पहले पहले ही कॉल करता हूं" - 13:51-13:53). |
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 7.3
+- **Executive Summary:** The call was an inbound support/complaint call where the customer expressed dissatisfaction with past service issues and sought a monthly payment plan for renewal. While the agent professionally acknowledged past issues and offered a reasonable alternative (extended plan duration), the customer's primary request for monthly payment was denied due to company policy. The call concluded with a clear follow-up plan, but the customer remained hesitant about the proposed long-term commitment.
+- **Actionable Coaching Tip:** The agent could explore if there are any *short-term* trial or introductory optimization plans (even if not full service) that could align with the customer's desire to "see sales performance" before committing to a longer duration, rather than immediately pushing for a 3-month commitment. This might bridge the gap between company policy and customer's immediate need for proof of concept.

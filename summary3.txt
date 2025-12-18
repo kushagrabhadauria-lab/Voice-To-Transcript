@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Inbound | Support/Complaint
+- **Language:** Hindi
+- **Outcome:** Partially Resolved with follow-up needed
+
+## 2. PARTICIPANTS
+- **Agent:** Prince | Style: Professional, Explanatory, Empathetic
+- **Customer:** [Name not explicitly stated] | Style: Frustrated, Detailed, Hesitant
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** Follow-up on previous service issues and discussion regarding plan renewal.
+- **Customer’s concern/request:** Past issues with service quality, delays in product listings, incorrect pricing, and a desire for flexible (monthly) payment options for future plans.
+- **Related issues discussed:** Delays in account access, unallocated account manager, time taken for brand approval, price mismatches leading to financial loss, and the company's policy against monthly payment plans.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 6/10
+    - **Justification:** The agent offered a 3-month + 15-day plan extension to compensate for past delays (7:42-7:45), but the customer's request for a monthly payment option was denied (5:18-5:32), leaving the core renewal decision unresolved.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 6/10
+    - **Justification:** The customer started with clear frustration over past negligence and issues (1:41-1:42, 2:04-2:06) and ended in a neutral state, agreeing to consider the proposed solution but not expressing strong satisfaction (10:03-10:17, 12:01-12:02).
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 4/10
+    - **Justification:** The customer expressed significant doubt about past processes and stated he needed to "देखूंगा कि सेल्स का कैसा काम हो रहा है" (10:12-10:14) before committing, indicating a lack of immediate trust in the service's future performance.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 8.5/10
+    - **Justification:** The agent demonstrated empathy by acknowledging "थोड़ा हमारी साइड से लैग हुआ है" (1:12-1:13), actively listened to the customer's detailed concerns, and provided clear explanations for company policies (5:28-5:32).
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 8/10
+    - **Justification:** The call concluded with a clear action item for the customer to inform the agent of his decision by a specific date (12:24-12:28, 13:51-13:53), followed by a polite sign-off.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 6.95
+- **Executive Summary:** The call achieved partial resolution by offering a plan extension to compensate for past issues, but the customer's key request for monthly payment was denied, leaving him undecided about renewal. The agent demonstrated strong handling quality with empathy and clear explanations, but the customer's trust remained low due to past problems and the lack of full flexibility. The call concluded with a clear follow-up plan for the customer to make a decision.
+- **Actionable Coaching Tip:** The agent should explore creative solutions or escalate the monthly payment request to a supervisor if possible, especially given the customer's expressed need to evaluate sales performance before committing to a longer plan.
