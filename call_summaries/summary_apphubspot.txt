@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Inbound | Support
+- **Language:** Hindi
+- **Outcome:** Unresolved
+
+## 2. PARTICIPANTS
+- **Agent:** Lakshmi | Style: Polite, Inquisitive
+- **Customer:** Unnamed | Style: Direct, Informative
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** The customer wanted to speak with a specific person, possibly the owner of a hotel, and provided a contact number.
+- **Customer’s concern/request:** To be connected to or get the contact details for the hotel owner. The customer provided a number, clarifying it belonged to the person managing the software, not the owner.
+- **Related issues discussed:** The agent attempted to confirm if the provided number was for the hotel owner.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 4/10
+    - **Justification:** The issue was not resolved as the agent was trying to connect with the owner, but the customer provided a number for a different person, and the call ended without a clear path to reach the actual owner.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 6/10
+    - **Justification:** The customer's sentiment remained neutral throughout the call, starting with a direct request and ending without any explicit positive or negative change.
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 5/10
+    - **Justification:** The customer was compliant in providing information but did not express explicit thanks or strong confidence in the agent's ability to fully resolve the initial request.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 7.5/10
+    - **Justification:** The agent was polite and actively listened, confirming the number and clarifying who the customer wanted to speak with, but did not offer a clear path to connect with the actual owner.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 4/10
+    - **Justification:** The call ended abruptly with the agent instructing to call the provided number ("नंबर पे कॉल कर दो" at 0:54) without a clear summary or polite sign-off.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 5.35
+- **Executive Summary:** The call concluded without the customer's primary request to speak with the hotel owner being fulfilled, as the provided number was for a software manager. The agent maintained a polite and inquisitive demeanor but failed to establish a clear resolution path or provide a proper call closure. The customer's sentiment remained neutral, indicating neither satisfaction nor significant dissatisfaction.
+- **Actionable Coaching Tip:** The agent should ensure a clear understanding of the customer's exact need (e.g., "Do you want to speak to the hotel owner or the person who manages the software?") and, if unable to directly connect, provide alternative solutions or a clear next step for resolution, followed by a proper closing statement.

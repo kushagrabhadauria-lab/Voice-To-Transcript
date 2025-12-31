@@ -393,25 +393,9 @@ class CallSummaryPipeline:
 
 CALL_RECORDS = [
     {
-        "record_id" : "291733109452",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=1767102986.367261&type=rec&token=bkhSQitQV3NjSmRBeGxWMkFhcm1OczBORzBJVFBCZmdsendsaXZLaVFCZ3RhK0Q2REd4YVJJaS9FZnVsZHc1TDo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+        "record_id" : "apphubspot",
+        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c81957d5-8745-4c0f-b7a1-2af3ec4088bd&type=rec&token=Mk13cENzQkR1NWF3eXlCaE5BRytSZU1ZakV3YzdkcktEcUlpT0VXWUtRZmU3dVBWNXhVOW9NZEFKaUZEbTlhSjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
     },
-    {
-        "record_id" : "291663327937",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=85fe084f-59aa-4289-a068-ae649f67d014&type=rec&token=T2N0dFg2OWwxVjZUYmFrcHE2Z3YyQ0lWYml2QzRhMGJuQUVIRzd2MXF2QkRzNWF2aHRzbHhLRDd5TzlVREpFVzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
-    {
-        "record_id" : "291733101256",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=3f5d43bc-106a-4508-8e02-f5935d53d686&type=rec&token=dDAvMUxsZHlYMUZ1S000RDczYmR6VVZ1bTNJajlkQ0R6Rk9qOFkrcjJqdGp5QnB2cHJpWlFyTi9DckpadEh5eTo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
-    {
-        "record_id" : "291663323835",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=995d0bf0-0f59-4017-8afa-d494c9c081c7&type=rec&token=Tld2ZkVRSGV2ZTh1TDEzTXdaeTIxU0UyQnQwT1JQdnNiNi9DMzFKZng2bnlvMzZHZCtXYll5b1piQXE4MHJzVzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
-    {
-        "record_id" : "290835003111",
-        "recording_url": "https://cloudphone.tatateleservices.com/file/recording?callId=1767096063.94001&type=rec&token=OUxnUjRKQ0c4OTVYV09mdmR4cHJERnFjRVMwYUFHbUlEVzNUUm0xZTRKOXovS0xlMFdPOFpqT3JXb3c2RE0rNjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    }
 ]
 
 
