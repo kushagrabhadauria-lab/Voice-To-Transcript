@@ -147,7 +147,7 @@ class GeminiFileManager:
 
 
 class CallSummaryGenerator:
-    FILTERED_SUMMARY_PROMPT = """
+    FILTERED_SUMMARY_PROMPT_TEMPLATE = """
        # ROLE
         You are an expert Call Quality Analyst specializing in Customer Satisfaction (CSAT) and Agent Performance.
 
@@ -159,6 +159,28 @@ class CallSummaryGenerator:
         - DIFFERENTIATION: Clearly identify the CUSTOMER and the AGENT.
         - EVIDENCE-BASED: For every score, provide a specific quote or reference from the call.
         - SCORING: Strictly follow the 0–10 scale. Use decimals (e.g., 7.5) if necessary for nuance.
+
+        # AUDIO VALIDITY CHECK (MANDATORY)
+
+        Before performing any analysis, you MUST first determine whether a valid two-way conversation exists.
+
+        A call should be considered INVALID and NON-ANALYZABLE if ANY of the following are true:
+        - The audio contains only background noise, silence, music, or environmental sounds.
+        - Only the AGENT is speaking and there is no verbal response from the CUSTOMER.
+        - Voices are present but there is no meaningful conversational exchange.
+        - Speech is unintelligible for most of the call duration.
+        - The CUSTOMER never responds verbally to the AGENT.
+
+        If the call is INVALID:
+        - DO NOT generate a CSAT score.
+        - DO NOT fill the CSAT scorecard.
+        - DO NOT make assumptions or infer intent.
+
+        Instead, return EXACTLY the following response and NOTHING else:
+
+        "NO VALID CONVERSATION DETECTED.
+        Reason: The recording contains no meaningful two-way interaction between the customer and the agent (only background noise, one-sided speech, or silence)."
+
 
         # SCORING FRAMEWORK
         
@@ -280,49 +302,43 @@ class CallSummaryGenerator:
         raise RuntimeError("Gemini API returned 503 after 5 retries")
 
 
-    def generate_summary(self, file_input, file_type):
-        '''
-            file_input:
-                - SMALL FILE → Part object (Part.from_bytes)
-                - LARGE FILE → file_info object returned from Gemini after upload
-            file_type: "small" or "large"
-
-        '''
+    def generate_summary(self, file_input, file_type, record_id):
         logging.info("Generating filtered call summary...")
-        logging.info(f"DEBUG: Part.from_text type: {type(Part.from_text)}")
-        logging.info(f"DEBUG: Part.from_text type: {type(Part.from_uri)}")
+
+        prompt_with_metadata = f"""
+        # CALL METADATA
+        - Record ID: {record_id}
+
+        IMPORTANT:
+        Use this Record ID only for reference.
+        Do NOT invent details.
+        Do NOT assume conversation validity.
+
+        {self.FILTERED_SUMMARY_PROMPT_TEMPLATE}
+        """
 
         if file_type == "large":
-            # file_input is a Gemini file_info object
             parts = [
                 Part.from_uri(
                     file_uri=file_input.uri,
                     mime_type=file_input.mime_type
                 ),
-                Part.from_text(text=self.FILTERED_SUMMARY_PROMPT),
+                Part.from_text(text=prompt_with_metadata),
             ]
         else:
-            # file_input is already a Part.from_bytes object
             parts = [
                 file_input,
-                Part.from_text(text=self.FILTERED_SUMMARY_PROMPT),
+                Part.from_text(text=prompt_with_metadata),
             ]
-
-        # response = model.generate_content(
-        #     model="gemini-2.5-flash",
-        #     contents=[Content(parts=parts)],
-        #     config=config
-        # )
 
         response = self.call_gemini_with_retry([Content(parts=parts)])
 
-        summary = response.text        
-
+        summary = response.text
         if not summary:
             raise ValueError("Empty summary after retry.")
 
-        logging.info("Summary generated successfully!")
         return summary.strip()
+
 
 
 class CallSummaryPipeline:
@@ -361,35 +377,83 @@ class CallSummaryPipeline:
 
             #generate summary
 
-            summary = self.generator.generate_summary(file_obj_or_part, file_type)
+            summary = self.generator.generate_summary(
+                file_obj_or_part,
+                file_type,
+                record_id=self.recording_url.split("callId=")[-1][:20]
+            )
+
             logging.info(f"Length: {len(summary)} characters")
             return summary
 
         except Exception as e:
             logging.error(f"Error: {e}")
             raise
-        
 
+
+CALL_RECORDS = [
+    {
+        "record_id" : "291733109452",
+        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=1767102986.367261&type=rec&token=bkhSQitQV3NjSmRBeGxWMkFhcm1OczBORzBJVFBCZmdsendsaXZLaVFCZ3RhK0Q2REd4YVJJaS9FZnVsZHc1TDo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    },
+    {
+        "record_id" : "291663327937",
+        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=85fe084f-59aa-4289-a068-ae649f67d014&type=rec&token=T2N0dFg2OWwxVjZUYmFrcHE2Z3YyQ0lWYml2QzRhMGJuQUVIRzd2MXF2QkRzNWF2aHRzbHhLRDd5TzlVREpFVzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    },
+    {
+        "record_id" : "291733101256",
+        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=3f5d43bc-106a-4508-8e02-f5935d53d686&type=rec&token=dDAvMUxsZHlYMUZ1S000RDczYmR6VVZ1bTNJajlkQ0R6Rk9qOFkrcjJqdGp5QnB2cHJpWlFyTi9DckpadEh5eTo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    },
+    {
+        "record_id" : "291663323835",
+        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=995d0bf0-0f59-4017-8afa-d494c9c081c7&type=rec&token=Tld2ZkVRSGV2ZTh1TDEzTXdaeTIxU0UyQnQwT1JQdnNiNi9DMzFKZng2bnlvMzZHZCtXYll5b1piQXE4MHJzVzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    },
+    {
+        "record_id" : "290835003111",
+        "recording_url": "https://cloudphone.tatateleservices.com/file/recording?callId=1767096063.94001&type=rec&token=OUxnUjRKQ0c4OTVYV09mdmR4cHJERnFjRVMwYUFHbUlEVzNUUm0xZTRKOXovS0xlMFdPOFpqT3JXb3c2RE0rNjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    }
+]
 
 
 if __name__ == "__main__":
     load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
-    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=1763533443.265374&type=rec&token=cS9OT1lmS01vV2hhdlVBSWJpU2FlNVhycUsvRW9xNWcyNVJJNWpPUjFYdmNJeHRXZ1NIbUVyZjFLRDY3NkZXczo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    FILE_PATH = os.getcwd()+"/downloads/call_19.mp3"
+
+    output_dir = "call_summaries"
+    os.makedirs(output_dir, exist_ok=True)
 
     start_time = datetime.now()
-    logging.info(f"Started processing at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logging.info(f"Started batch processing at: {start_time}")
 
-    pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL)
-    pipeline.set_file_path(FILE_PATH)
-    summary = pipeline.run()
-    with open("summary3.txt", "w") as f:
-        f.write(summary)
+    for record in CALL_RECORDS:
+        record_id = record["record_id"]
+        recording_url = record["recording_url"]
+
+        logging.info(f"🚀 Processing record_id={record_id}")
+
+        try:
+            pipeline = CallSummaryPipeline(
+                api_key=GEMINI_KEY,
+                recording_url=recording_url
+            )
+
+            summary = pipeline.run()
+
+            output_file = os.path.join(
+                output_dir,
+                f"summary_{record_id}.txt"
+            )
+
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(summary)
+
+            logging.info(f"✅ Summary saved: {output_file}")
+
+        except Exception as e:
+            logging.error(f"❌ Failed for record_id={record_id}: {e}")
 
     end_time = datetime.now()
     duration = end_time - start_time
 
-    logging.info(f"Finished processing at: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    logging.info(f"Finished batch processing at: {end_time}")
     logging.info(f"Total time taken: {duration.total_seconds():.2f} seconds")
-
