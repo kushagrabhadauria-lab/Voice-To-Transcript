@@ -6,3 +6,5 @@ temp/*
 summaries.json
 *.csv
 *.txt
+!call_summaries/
+!call_summaries/*.txt

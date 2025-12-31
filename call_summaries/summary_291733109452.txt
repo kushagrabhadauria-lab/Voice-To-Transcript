@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Outbound | Complaint
+- **Language:** Hindi
+- **Outcome:** Unresolved
+
+## 2. PARTICIPANTS
+- **Agent:** Aditi | Style: Professional, Empathetic, Solution-oriented
+- **Customer:** Unnamed | Style: Frustrated, Confused, Demanding clarity
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** The agent initiated the call to check if the customer had any queries or concerns regarding a plan they had taken.
+- **Customer’s concern/request:** The customer complained that the promised social media posts (Facebook, Instagram, YouTube videos) for 6 months, including "meta" content, had not been delivered, and they had no access or information about them.
+- **Related issues discussed:** Lack of communication from the company, inability to track the work done, and confusion about where the content was supposedly posted.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 6.5/10
+    - **Justification:** The agent acknowledged the issue and promised a follow-up call from the social media team, but the customer's primary concern about the missing posts and lack of information was not resolved during the call.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 6.0/10
+    - **Justification:** The customer started very frustrated, expressing confusion and lack of contact, and ended with a neutral "ठीक है" (2:43) after the agent promised a follow-up.
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 4.0/10
+    - **Justification:** The customer repeatedly stated they had no information or understanding of the service provided ("कुछ भी पता ही नहीं है" - 0:37), indicating a significant lack of trust in the company's delivery.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 8.5/10
+    - **Justification:** The agent listened patiently to the customer's extensive complaint, apologized for the issue ("मैं माफ़ी चाहूंगी ऐसा इशू हो रहा है" - 0:48), and clearly outlined the next steps for resolution, maintaining a professional demeanor.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 8.0/10
+    - **Justification:** The agent clearly summarized the next steps, including a follow-up call and resolution ("जो भी इशू आएगा उसको as soon as possible resolve किया जाएगा" - 2:39-2:41), and ended the call politely, which the customer acknowledged positively.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 7.10
+- **Executive Summary:** The customer called with significant frustration regarding undelivered social media services and a lack of communication. While the agent demonstrated excellent handling quality by actively listening, apologizing, and establishing clear next steps, the core issue remained unresolved on the call. This led to a neutral customer sentiment at the end and a low score for customer trust, despite the agent's professional closure.
+- **Actionable Coaching Tip:** The agent could try to proactively gather more specific details about the missing posts (e.g., specific dates, types of content expected) during the call to provide a more detailed update to the social media team, potentially leading to a quicker and more targeted resolution.

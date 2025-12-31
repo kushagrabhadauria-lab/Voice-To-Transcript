@@ -1,0 +1,2 @@
+NO VALID CONVERSATION DETECTED.
+Reason: The recording contains no meaningful two-way interaction between the customer and the agent (only background noise, one-sided speech, or silence).

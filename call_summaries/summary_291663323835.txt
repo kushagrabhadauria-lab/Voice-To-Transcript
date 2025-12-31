@@ -1,0 +1,43 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Inbound | Support
+- **Language:** Hindi
+- **Outcome:** Resolved
+
+## 2. PARTICIPANTS
+- **Agent:** Ganesh ji | Style: Patient, Helpful, Methodical
+- **Customer:** Unnamed | Style: Initially confused, Cooperative, Appreciative
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** The customer was unable to log in to an account due to an incorrect password.
+- **Customer’s concern/request:** To regain access to their account.
+- **Related issues discussed:**
+    - Agent's working hours.
+    - Verification of the correct email address and password format (including capitalization).
+    - Receiving a verification code on a registered phone number.
+    - The customer's intention to change the password after gaining access.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 9.5/10
+    - **Justification:** The issue of gaining access to the account was resolved, with the agent confirming, "Okay sir, access aa gaya hai aapke account pe" (0:50-0:51).
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 9/10
+    - **Justification:** The customer's initial confusion about the password (0:20-0:21, 0:48-0:50) transitioned to appreciation and thanks at the end of the call (1:13-1:15).
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 9/10
+    - **Justification:** The customer explicitly thanked the agent at the end of the call, stating "Thank you" (1:13-1:15).
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 9.5/10
+    - **Justification:** The agent demonstrated high empathy by stating, "working time actually 7 tak hi hota hai, main isi ke liye baitha hu bas aapke work ke liye" (0:05-0:09), and patiently guided the customer through multiple attempts and verification steps.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 9.5/10
+    - **Justification:** The agent clearly summarized the resolution, stating "access aa gaya hai aapke account pe, main yahan pe ise verified kara deta hu aur baaki kaam ke liye ab hum kar lenge hum yahan se continue kar lenge" (0:51-0:58), and provided clear next steps for the customer to change the password.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 9.4
+- **Executive Summary:** The customer called to resolve an account access issue, which the agent successfully addressed through a patient and methodical verification process. The agent's willingness to assist beyond working hours and clear guidance led to a positive resolution. The customer's sentiment improved from initial confusion to appreciation, indicating high satisfaction with the service provided.
+- **Actionable Coaching Tip:** The agent could proactively offer to send a brief email summary of the access confirmation and the next steps for password change, although the verbal closure was already excellent.
