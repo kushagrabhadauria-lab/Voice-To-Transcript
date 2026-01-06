@@ -1,0 +1,65 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Inquiry
+- **Language:** Hindi
+- **Outcome:** Partially Resolved
+
+## 2. PARTICIPANTS
+- **Agent(s):** Agent1
+- **Customer(s):** Customer1 (Intermediary)
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** Agent1 called to obtain the contact number for the hotel's owner.
+- **Customer’s concern/request:** Customer1 clarified that the number provided was not for the owner but for someone managing the hotel's operations.
+- **Related issues discussed:** Verification of the provided contact number.
+
+## 4. CSAT SCORECARD
+a) ISSUE RESOLUTION ASSESSMENT  
+- Score: 6/10  
+- Justification: The agent's request for the owner's number was not fully met, but an alternative contact for someone overseeing the hotel was provided.
+
+b) CUSTOMER SENTIMENT TRAJECTORY  
+- Score: 7/10  
+- Justification: Customer1 maintained a neutral and cooperative tone throughout the call, providing information clearly without expressing any negative sentiment.
+
+c) CUSTOMER TRUST & CONFIDENCE  
+- Score: 6/10  
+- Justification: Customer1 complied with the request by providing a number and clarification, indicating neutral trust in the interaction.
+
+d) AGENT HANDLING QUALITY  
+- Score: 9/10  
+- Justification: Agent1 was polite, clearly stated the purpose of the call, actively listened, and confirmed the provided number.
+
+e) CLOSURE QUALITY  
+- Score: 3/10  
+- Justification: The call ended abruptly after the number was confirmed, lacking a proper closing or summary.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 6.4
+- **Executive Summary:** The agent initiated the call politely, seeking the hotel owner's contact number. The customer, acting as an intermediary, provided a number but clarified it belonged to someone overseeing the hotel's operations rather than the direct owner. While the agent's primary request for the owner's number was not fully met, an alternative contact was provided, and the agent handled the interaction professionally despite an abrupt call ending.
+- **Actionable Coaching Tip:** The agent should ensure a clear and polite closing to the call, summarizing any next steps or thanking the customer for their time, rather than an abrupt hang-up.
+
+## 6. TRANSCRIPTION
+
+Agent1: Hello.
+Agent1: Good afternoon sir. Very good afternoon. My name is Lakshmi, calling from Goibibo.
+Customer1: One more thing.
+Agent1: Hmm.
+Customer1: बात कर लूं आपसे? (Can I talk to you?)
+Agent1: Sir, किस बारे में बात कर सकती हूं आपसे? (Sir, what can I talk to you about?)
+Customer1: या दूसरा नंबर है उससे हम से कांटेक्ट कर लो आप। (Or contact us on the other number.)
+Agent1: हां, प्लीज आप दूसरा नंबर बता दीजिए जिससे मैं कि ओनर से बात कर सकूं। (Yes, please tell me the other number so I can talk to the owner.)
+Customer1: 8191
+Agent1: एक मिनट सर, क्वालिटी में ले रही हूं अभी। (One minute sir, I'm taking it down now.)
+Agent1: हम्म।
+Agent1: बताइए 8191 (Tell me 8191)
+Customer1: 00
+Agent1: 00
+Customer1: 8966
+Agent1: एक बार चेक कर दीजिए सर। 81910081 (Please check once sir. 81910081)
+Customer1: 66
+Agent1: ये ओनर का नंबर है सर? (Is this the owner's number sir?)
+Customer1: ये (This)
+Customer1: ये होटल के ओनर का नंबर है? (Is this the hotel owner's number?)
+Customer1: नहीं नहीं, ये हमारे जो देख रहे हैं ना ये सॉफ्टवेयर देख रहे हैं, उन्होंने को दे रखा है। वो देख रहे हैं। (No no, this is given to the ones who are looking after this, who are looking after the software. They are looking after it.)
+Agent1: ठीक है सर। (Okay sir.)
+Agent1: प्लेस नंबर से (From the place number)
