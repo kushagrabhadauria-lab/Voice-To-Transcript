@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Contact Attempt
+- **Language:** Hindi
+- **Outcome:** Unresolved (New contact number provided for follow-up)
+
+## 2. PARTICIPANTS
+- **Agent:** Agent 1 | Style: Professional, Polite, Persistent
+- **Customer:** Customer 1 | Style: Direct, Informative, Cooperative
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** The agent initiated the call, stating "Lakshmi calling from...", likely attempting to reach a specific contact or owner.
+- **Customer’s concern/request:** The customer (an intermediary) informed the agent that the current number is not for the intended party and provided an alternative number for the "owner" or "software person."
+- **Related issues discussed:** Clarification on whether the provided alternative number belongs to the owner or the person managing the software.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 6/10
+    - **Justification:** The primary issue of speaking to the intended contact was not resolved on this call, but a clear follow-up path was established by obtaining an alternative number.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 6/10
+    - **Justification:** The customer's sentiment remained neutral throughout the call, starting and ending calmly without expressing strong positive or negative emotions.
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 5/10
+    - **Justification:** The customer was compliant in providing the requested information and clarifying details, but did not express explicit trust or enthusiasm.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 8/10
+    - **Justification:** The agent was professional, polite, actively listened to the customer, and clearly confirmed the provided number.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 6/10
+    - **Justification:** The call ended with the agent confirming the number, but lacked an explicit summary of next steps or a formal polite sign-off.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 6.5
+- **Executive Summary:** The agent effectively obtained an alternative contact number for the intended party, demonstrating professionalism and clear communication throughout the interaction. While the initial objective of speaking to the owner was not achieved on this call, a clear path for follow-up was successfully established. Customer sentiment remained neutral, indicating a satisfactory but not exceptional interaction.
+- **Actionable Coaching Tip:** The agent could improve closure quality by explicitly stating the next steps, such as "Thank you for the number, I will call them now," to provide a clearer end to the interaction.

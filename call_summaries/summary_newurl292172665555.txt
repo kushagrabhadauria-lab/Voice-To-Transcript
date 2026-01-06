@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Support/Complaint
+- **Language:** Hindi, English
+- **Outcome:** Unresolved
+
+## 2. PARTICIPANTS
+- **Agent:** Sameer (Agent 1), Manish (Agent 2 - Verification Team) | Style: Agent 1 was polite and informative; Agent 2 was authoritative but provided questionable advice.
+- **Customer:** Primary Customer | Style: Frustrated, Tech-savvy, Questioning
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** The agent called the customer to inform them that their request to add "Lodging" to their business name on Google might lead to their profile becoming non-verified.
+- **Customer’s concern/request:** The customer wanted to understand why adding "Lodging" would cause non-verification, arguing that "Zorba Inn" already implies lodging and that they have all necessary official documents.
+- **Related issues discussed:** Google's verification criteria (GST, Electricity Bill, Udhyam Certificate), the exact matching of business names on documents, and the potential for the customer's profile to lose its verified status and visibility.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 2/10
+    - **Justification:** The issue remained unresolved, with the agent suggesting the customer alter official business documents, which the customer found unacceptable and potentially fraudulent.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 2/10
+    - **Justification:** The customer's sentiment deteriorated from neutral to aggravated due to the lack of a viable solution and the agent's problematic advice.
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 0/10
+    - **Justification:** The customer repeatedly expressed doubt, questioned the agent's understanding and advice, and implied the agent was not adequately addressing the problem.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 3/10
+    - **Justification:** While initially professional, Agent 2 provided highly questionable advice by suggesting the customer modify official documents, which significantly undermined the quality of assistance.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 4/10
+    - **Justification:** The call ended with a promise to communicate with Google and update the customer, but without a clear summary of next steps or a satisfactory resolution for the customer.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 2.5
+- **Executive Summary:** The call resulted in a very low CSAT score primarily because the core issue remained unresolved and the agent offered highly problematic advice regarding altering official documents. The customer's frustration escalated throughout the call, leading to a complete erosion of trust and confidence in the proposed solutions.
+- **Actionable Coaching Tip:** Agents must never suggest or imply that customers should alter official documents; instead, they should focus on legitimate solutions or clearly explain limitations and alternative official processes.

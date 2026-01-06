@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Support
+- **Language:** Hindi
+- **Outcome:** Partially Resolved (transitioned to Google Meet for verification)
+
+## 2. PARTICIPANTS
+- **Agent:** Speaker 2 | Style: Professional, Helpful, Patient
+- **Customer:** Sachin (owner of Dhumal Banquet Hall) | Style: Frustrated (initially), Cooperative
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** Agent called to assist the customer with Google My Business (GMB) profile verification, which was currently non-verified.
+- **Customer’s concern/request:** The customer expressed frustration about the delay in GMB verification and wanted it completed. He also inquired about previously taken Google photos that were not uploaded.
+- **Related issues discussed:** Un-uploaded photos from a previous Google photoshoot.
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 6/10
+    - **Justification:** The main issue of GMB verification was partially addressed by initiating a Google Meet, establishing a clear next step, but a secondary issue regarding un-uploaded photos was not resolved.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 7/10
+    - **Justification:** The customer's sentiment shifted from initial frustration ("main iske liye kitne din se pareshan hoon") to a neutral/calm state as the agent provided a clear next step.
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 7/10
+    - **Justification:** The customer was compliant with the agent's instructions and brought up an additional concern, indicating a reasonable level of trust without expressing high enthusiasm or doubt.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 9/10
+    - **Justification:** The agent was polite, clearly explained the purpose, provided actionable instructions, and actively listened to the customer's secondary concern.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 6/10
+    - **Justification:** The call transitioned directly to a Google Meet without a formal summary of action items or a polite sign-off, but the immediate next step was clear.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 7.1
+- **Executive Summary:** The call was initiated by the agent to assist the customer with Google My Business profile verification. The customer expressed initial frustration about the delay but was cooperative throughout the call, following the agent's instructions to join a Google Meet. While the main issue was partially addressed with a clear next step, a secondary concern about un-uploaded photos was acknowledged but not resolved on the call.
+- **Actionable Coaching Tip:** The agent should ensure to provide clear next steps or a follow-up plan for all customer concerns raised during the call, even if they are secondary to the main purpose, to ensure comprehensive issue resolution.

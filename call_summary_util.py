@@ -1,5 +1,4 @@
 import os
-import csv
 import time
 import requests
 from datetime import datetime
@@ -151,6 +150,17 @@ class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT_TEMPLATE = """
         # ROLE
         You are an expert Call Quality Analyst specializing in Customer Satisfaction (CSAT) and Agent Performance.
+        
+        
+        # SPEAKER MAPPING (MANDATORY)
+            Before providing the evaluation, identify every unique speaker and assign them to a TEAM:
+            - TEAM AGENT: Anyone representing the company (e.g., Agent 1, Supervisor, Technical Specialist).
+            - TEAM CUSTOMER: Anyone on the external side (e.g., Primary Customer, Intermediary/Staff, Spouse).
+
+        
+        # IDENTIFICATION ANCHORS
+            - AGENT Side: Uses professional greetings, asks for verification, has access to internal systems, or transfers the call.
+            - CUSTOMER Side: Provides personal info, explains the grievance, or is the one being helped.        
 
         # CORE DEFINITIONS (MANDATORY)
         - **AGENT(S):** One or more speakers representing the company.
@@ -161,26 +171,11 @@ class CallSummaryGenerator:
         IMPORTANT:
         - There may be MULTIPLE agents and/or MULTIPLE customers.
         - NEVER merge agent speech into customer speech or vice versa.
-        - NEVER assume the first speaker is the customer.
-        - NEVER assume the person who answers is the owner or decision-maker.
+        - Don't assume the first speaker is the customer.
+        - Don't assume the person who answers is the owner or decision-maker.
 
         # TASK
         Analyze the call recording and generate a CSAT report based strictly on spoken evidence.
-
-        # AUDIO VALIDITY CHECK (FIRST AND MANDATORY)
-
-        Before any analysis, determine if a valid conversational exchange exists.
-
-        A call is INVALID if:
-        - No customer-side participant responds verbally to any agent.
-        - Audio contains only silence, noise, music, or unintelligible speech.
-        - Only agents speak with no external participant response.
-        - Voices exist but no meaningful exchange occurs.
-
-        If INVALID, return EXACTLY:
-
-        NO VALID CONVERSATION DETECTED.
-        Reason: No meaningful two-way interaction between agent(s) and customer-side participant(s).
 
         # ANALYSIS RULES
         - OBJECTIVITY: Use only spoken content. No assumptions.
@@ -229,7 +224,7 @@ class CallSummaryGenerator:
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
 
         ## 1. CALL OVERVIEW
-        - **Call Type:** [Inbound/Outbound] | [Support/Sales/Complaint/Contact Attempt]
+        - **Call Type:** [Support/Sales/Complaint/Contact Attempt]
         - **Language:**
         - **Outcome:** [Resolved/Unresolved/Escalated]
 
@@ -269,6 +264,7 @@ class CallSummaryGenerator:
         - **Normalized CSAT (0–10):** [Weighted Average]
         - **Executive Summary:** [3-sentence summary of why this score was given.]
         - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
+
     """
 
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
@@ -359,89 +355,6 @@ class CallSummaryGenerator:
         return summary.strip()
 
 
-class CallAnalyticsGenerator:
-    def __init__(self, api_key, model_name="gemini-2.5-flash"):
-        self.client = genai.Client(api_key=api_key)
-        self.model_name = model_name
-
-    def _call_gemini(self, parts, temperature=0.1):
-        response = self.client.models.generate_content(
-            model=self.model_name,
-            contents=[Content(parts=parts)],
-            config=GenerateContentConfig(temperature=temperature)
-        )
-        return response.text.strip()
-
-    def transcribe(self, file_part):
-        prompt = Part.from_text(
-            text="You are a professional transcription system. "
-                 "Transcribe the audio verbatim. Return plain text only."
-        )
-        return self._call_gemini([file_part, prompt])
-
-
-
-def generate_csv(records, api_key, output_csv="call_analysis.csv"):
-    downloader = AudioDownloader(url=None)
-    manager = GeminiFileManager(api_key)
-    summary_generator = CallSummaryGenerator(api_key)
-    analytics = CallAnalyticsGenerator(api_key)
-
-    rows = []
-
-    for record in records:
-        record_id = record["record_id"]
-        recording_url = record["recording_url"]
-
-        logging.info(f"🚀 Processing {record_id}")
-
-        downloader.url = recording_url
-        audio_path = downloader.download(filename=f"{record_id}.mp3")
-
-        file_obj, file_type = manager.prepare_file(audio_path)
-
-        # ✅ ALWAYS CREATE audio_part
-        if file_type == "large":
-            file_obj = manager.wait_until_ready(file_obj)
-            audio_part = Part.from_uri(
-                file_uri=file_obj.uri,
-                mime_type=file_obj.mime_type
-            )
-        else:
-            audio_part = file_obj
-
-        # ---------- ANALYTICS ----------
-        transcription = analytics.transcribe(audio_part)
-
-        summary = summary_generator.generate_summary(
-            audio_part,        # ✅ FIXED
-            "small",           # treat summary input as Part
-            record_id=record_id
-        )
-
-        rows.append({
-            "record_id": record_id,
-            "recording_url": recording_url,
-            "transcription": transcription,
-            "summary": summary
-        })
-
-    # ---------- WRITE CSV ----------
-    with open(output_csv, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "record_id",
-                "recording_url",
-                "transcription",
-                "summary"
-            ]
-        )
-        writer.writeheader()
-        writer.writerows(rows)
-
-    logging.info(f"✅ CSV generated successfully: {output_csv}")
-
 
 class CallSummaryPipeline:
     def __init__(self, api_key, recording_url=None, file_path=None):
@@ -494,22 +407,14 @@ class CallSummaryPipeline:
 
 
 CALL_RECORDS = [
-    {
-        "record_id" : "apphubspot",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c81957d5-8745-4c0f-b7a1-2af3ec4088bd&type=rec&token=Mk13cENzQkR1NWF3eXlCaE5BRytSZU1ZakV3YzdkcktEcUlpT0VXWUtRZmU3dVBWNXhVOW9NZEFKaUZEbTlhSjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
-    {
-        "record_id" : "292172665555",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c361db74-ccb8-4b4f-b375-e46befe07b35&type=rec&token=RkFiL3hrZ3ltODhKT0liazFUSlhiWVZiQm5GSEx1TExmV2xFTEdqMVQzZGpqK3BNUmwzaGxhU2svb3hCTUNvbDo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
-    {
-        "record_id" : "292172658405",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=e1598b95-f290-48dc-a4f2-037985ab3014&type=rec&token=R1RFMXUxcWVLNXEyUWRnQ0NGSUdidG5mT0dRU1ZEeFozTWFrNmhiemd3QXorNWlQQzlQUmJmWnBpMUgrdUZBSzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
-    {
-        "record_id" : "292529547989",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=05cbb106-2d34-46c6-b103-d43f8b577392&type=rec&token=SXJZc2hrV1BLVE1kamRuWnpsenVhcFBWZWZ3SklQYVZTcjdCSDNZOTJUa0hUSEhSUEthZFhFSW9yZHQ0UktMUjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    }
+    # {
+    #     "record_id" : "newapphubspot",
+    #     "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c81957d5-8745-4c0f-b7a1-2af3ec4088bd&type=rec&token=Mk13cENzQkR1NWF3eXlCaE5BRytSZU1ZakV3YzdkcktEcUlpT0VXWUtRZmU3dVBWNXhVOW9NZEFKaUZEbTlhSjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    # },
+    # {
+    #     "record_id" : "kas8minwali",
+    #     "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=571d8641-7d8c-4b86-ad94-98c6b54819c8&type=rec&token=L1NlZkc1UTlmUXh2WVNHNmc2ekNWL01tYktTa3YxNVFQNG9VanRKVUh6eldWMVFvZjdHUldGRlhyY0ZrVmtCNjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    # }
 ]
 
 
@@ -523,11 +428,32 @@ if __name__ == "__main__":
     start_time = datetime.now()
     logging.info(f"Started batch processing at: {start_time}")
 
-    generate_csv(
-        records=CALL_RECORDS,
-        api_key=GEMINI_KEY,
-        output_csv="call_analysis.csv"
-    )
+    for record in CALL_RECORDS:
+        record_id = record["record_id"]
+        recording_url = record["recording_url"]
+
+        logging.info(f"🚀 Processing record_id={record_id}")
+
+        try:
+            pipeline = CallSummaryPipeline(
+                api_key=GEMINI_KEY,
+                recording_url=recording_url
+            )
+
+            summary = pipeline.run()
+
+            output_file = os.path.join(
+                output_dir,
+                f"summary_{record_id}.txt"
+            )
+
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(summary)
+
+            logging.info(f"✅ Summary saved: {output_file}")
+
+        except Exception as e:
+            logging.error(f"❌ Failed for record_id={record_id}: {e}")
 
     end_time = datetime.now()
     duration = end_time - start_time

@@ -1,0 +1,39 @@
+## 1. CALL OVERVIEW
+- **Call Type:** Support/Onboarding
+- **Language:** Hindi/English
+- **Outcome:** Partial Resolution (Information gathered, next steps established, ad run deferred)
+
+## 2. PARTICIPANTS
+- **Agent:** Zoya | Style: Professional, Clear, Patient, Informative
+- **Customer:** Primary Customer | Style: Practical, Concerned about timing, Cooperative
+
+## 3. CALL PURPOSE & KEY TOPICS
+- **Main reason for call:** The agent initiated the call to gather necessary information for setting up the customer's complimentary Meta Ads service.
+- **Customer’s concern/request:** The customer expressed a desire to run the ad campaign after the 10th of the month due to staff training, to avoid potential loss of business, and also inquired about better ways to contact the team.
+- **Related issues discussed:** Business name and address verification, target location (10 km radius), specific offers (Flat 30% off on hair chemical services, bridal/groom makeup, Hydra Facial), contact numbers, logo and image usage, color theme preference, age targeting, and connecting with a specific team member (Rashmi ji).
+
+## 4. CSAT SCORECARD
+    a) **ISSUE RESOLUTION ASSESSMENT**
+    - **Score:** 8/10
+    - **Justification:** All necessary information for the creative was successfully gathered, and the customer's specific request to defer the ad run until after the 10th was accommodated, establishing a clear path forward.
+
+    b) **CUSTOMER SENTIMENT TRAJECTORY**
+    - **Score:** 9/10
+    - **Justification:** The customer moved from initial hesitation regarding the ad's timing to a calm and appreciative tone after the agent addressed his concerns and clearly explained the process.
+
+    c) **CUSTOMER TRUST & CONFIDENCE**
+    - **Score:** 9/10
+    - **Justification:** The customer provided all requested business details and expressed thanks at the end, indicating confidence in the agent's handling and the proposed next steps.
+
+    d) **AGENT HANDLING QUALITY**
+    - **Score:** 10/10
+    - **Justification:** The agent demonstrated excellent active listening, provided clear explanations, patiently gathered all necessary information, and effectively addressed customer concerns, including offering alternative contact methods.
+
+    e) **CLOSURE QUALITY**
+    - **Score:** 9/10
+    - **Justification:** The agent clearly summarized the next steps, confirmed the deferred ad run, and ended the call professionally, leaving the customer with a clear understanding.
+
+## 5. FINAL ASSESSMENT
+- **Normalized CSAT (0–10):** 9.0
+- **Executive Summary:** The agent expertly navigated the call, successfully gathering all required information for the customer's ad campaign while patiently addressing and accommodating the customer's specific timing concerns. The customer's initial hesitation was transformed into cooperation and appreciation due to the agent's clear communication and professional approach. The call concluded with a clear understanding of the next steps and a deferred ad launch, leading to a high CSAT score.
+- **Actionable Coaching Tip:** The agent could proactively offer the WhatsApp support number earlier in the call when the customer first mentions difficulty in contacting the team, rather than waiting for the customer to bring it up later.
