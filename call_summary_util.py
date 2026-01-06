@@ -148,43 +148,125 @@ class GeminiFileManager:
 
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT = """
-        You are an expert call analyst. Based on this call recording, provide ONLY the following sections:
 
-         1️⃣ CALL TYPE
-         - Call Type: (Inbound/Outbound, Support/Sales/Complaint/Inquiry)
-         - Primary Language(s):
+    # ROLE
+        You are an expert Call Quality Analyst specializing in Customer Satisfaction (CSAT) and Agent Performance.
+        
+        
+        # SPEAKER MAPPING (MANDATORY)
+            Before providing the evaluation, identify every unique speaker and assign them to a TEAM:
+            - TEAM AGENT: Anyone representing the company (e.g., Agent 1, Supervisor, Technical Specialist).
+            - TEAM CUSTOMER: Anyone on the external side (e.g., Primary Customer, Intermediary/Staff, Spouse).
 
-         2️⃣ OVERALL OUTCOME
-         - Overall Outcome: (Resolved/Unresolved/Follow-up needed/Escalated)
+        
+        # IDENTIFICATION ANCHORS
+            - AGENT Side: Uses professional greetings, asks for verification, has access to internal systems, or transfers the call.
+            - CUSTOMER Side: Provides personal info, explains the grievance, or is the one being helped.        
 
-         3️⃣ PARTICIPANTS
-         For each speaker:
-         - Name/Role: [exact name from intro or within the call]
-         - Communication Style:
-         - Key Characteristics:
+        # CORE DEFINITIONS (MANDATORY)
+        - **AGENT(S):** One or more speakers representing the company.
+        - **CUSTOMER(S):** One or more external speakers (owner, staff, family member, intermediary).
+        - **PRIMARY CUSTOMER:** The decision-maker or account owner, if identifiable.
+        - **INTERMEDIARY:** A customer-side participant who is NOT the decision-maker (e.g., receptionist, staff member, relative).
 
-         4️⃣ CALL PURPOSE & TOPIC
-         - Main reason for call:
-         - Customer’s concern/request:
-         - Related issues discussed:
+        IMPORTANT:
+        - There may be MULTIPLE agents and/or MULTIPLE customers.
+        - NEVER merge agent speech into customer speech or vice versa.
+        - Don't assume the first speaker is the customer.
+        - Don't assume the person who answers is the owner or decision-maker.
 
-         5️⃣ RESOLUTION STATUS
-         - Was the issue resolved: Yes/No/Partial
-         - Customer Satisfaction Rating: [X/10]
-         - Satisfaction Reasoning:
-           * Initial tone
-           * Emotional changes
-           * Satisfaction indicators
-           * End tone
+        # TASK
+        Analyze the call recording and generate a CSAT report based strictly on spoken evidence.
 
-         6️⃣ TONE & SENTIMENT ANALYSIS
-         - Customer emotion: Beginning → End
-         - Agent approach:
-         - Interaction quality:
-         - Escalation points:
+        # ANALYSIS RULES
+        - OBJECTIVITY: Use only spoken content. No assumptions.
+        - MULTI-PARTICIPANT AWARENESS:
+        - Attribute statements to roles, not individuals unless explicitly named.
+        - If multiple agents/customers speak, evaluate collective interaction quality.
+        - INTERMEDIARY HANDLING:
+        - If the customer-side speaker is not the decision-maker, clearly label them as INTERMEDIARY.
+        - Do NOT penalize CSAT for lack of resolution if the PRIMARY CUSTOMER never joined the call.
 
-         ⚠️ DO NOT include anything else.
-         ⚠️ Ensure accurate identification of agent vs customer.
+        # SCORING SCOPE (CRITICAL)
+        - Score AGENT PERFORMANCE based on how agents handled whoever they spoke with.
+        - Score CUSTOMER SENTIMENT based ONLY on spoken customer-side reactions.
+        - If resolution was impossible due to speaking only with an INTERMEDIARY, reflect this in scoring justification.
+
+
+
+        # SCORING FRAMEWORK
+        
+        1. ISSUE RESOLUTION STATUS (30%)
+        - 9–10: Issue fully resolved; no further action needed.
+        - 6–8: Partial resolution; clear follow-up path established.
+        - 2–5: Unresolved; vague next steps; customer left confused.
+        - 0–1: No resolution; customer requested escalation or refund.
+
+        2. CUSTOMER SENTIMENT TRAJECTORY (10%)
+        - 9–10: Negative/Neutral start -> Strong Positive/Appreciative end.
+        - 6–8: Negative start -> Neutral/Calm end.
+        - 2–5: Negative start -> Negative/Aggravated end (or worsened).
+
+        3. CUSTOMER TRUST & CONFIDENCE (10%)
+        - 8–10: Customer explicitly thanks agent or confirms future business.
+        - 4–7: Customer is compliant but shows no high enthusiasm.
+        - 0–3: Customer expresses doubt, threatens to cancel, or asks for manager.
+
+        4. AGENT HANDLING QUALITY (30%)
+        - 8–10: High empathy, active listening, clear technical explanations.
+        - 5–7: Professional and polite, but lacked deep empathy or struggled with technicals.
+        - 0–4: Defensive, rude, interrupted the customer, or provided incorrect info.
+
+        5. CLOSURE QUALITY (20%)
+        - 8–10: Clear summary of action items; polite sign-off; customer satisfied with end.
+        - 4–7: Standard sign-off; no summary of next steps.
+        - 0–3: Call cut off abruptly or customer ended the call in anger.
+
+        
+        # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
+
+        ## 1. CALL OVERVIEW
+        - **Call Type:** [Support/Sales/Complaint/Contact Attempt]
+        - **Language:**
+        - **Outcome:** [Resolved/Unresolved/Escalated]
+
+        ## 2. PARTICIPANTS
+        - **Agent:** [Name/Role] | [Style: e.g., Patient, Authoritative, Passive]
+        - **Customer:** [Name] | [Style: e.g., Frustrated, Tech-savvy, Distressed]
+
+        ## 3. CALL PURPOSE & KEY TOPICS
+        - **Main reason for call:**
+          (Reflect the INITIATING SPEAKER’S objective.)
+        - **Customer’s concern/request:**
+          (Decision-maker / Intermediary / Information provider)
+        - **Related issues discussed:**
+
+        ## 4. CSAT SCORECARD
+            a) **ISSUE RESOLUTION ASSESSMENT**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            b) **CUSTOMER SENTIMENT TRAJECTORY**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            c) **CUSTOMER TRUST & CONFIDENCE**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            d) **AGENT HANDLING QUALITY**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+            e) **CLOSURE QUALITY**
+            - **Score:** [0-10]/10
+            - **Justification:** [Single sentence with specific evidence or quote]
+
+        ## 5. FINAL ASSESSMENT
+        - **Normalized CSAT (0–10):** [Weighted Average]
+        - **Executive Summary:** [3-sentence summary of why this score was given.]
+        - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
+
     """
 
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
@@ -332,7 +414,7 @@ class CallSummaryPipeline:
 if __name__ == "__main__":
     load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
-    RECORDING_URL = None
+    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=33e030fb-9d20-4891-a076-483724126d5d&type=rec&token=Njl6aXhvNlFvYXpwbjdTaGN5Mmdjb1dONC9qOHdrdklDSkd0QWhFUUJYZnF3NHBnR2ZSS2diZzdONzdSa3A2UTo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
     FILE_PATH = os.getcwd()+"/downloads/call_19.mp3"
 
     start_time = datetime.now()
@@ -340,8 +422,11 @@ if __name__ == "__main__":
 
     pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL)
     pipeline.set_file_path(FILE_PATH)
-    summary = pipeline.run()
+    with open("summary1.txt", "w") as f:
+        summary = pipeline.run()
+        f.write(summary)
 
+    
     end_time = datetime.now()
     duration = end_time - start_time
 

@@ -40,7 +40,8 @@ class Interface():
         # self.get_call_recording_ids_from_csv_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated - New 500 Urls.csv")
 
         self.processed_ids = []
-        self.count = 1
+        self.total_call_processed = 1
+        self.not_processed_files = 0
         # changed: Ensure logs dir exists
         os.makedirs("logs", exist_ok=True)                                # changed
     
@@ -53,7 +54,7 @@ class Interface():
             - update hubspot
         """
         try:
-            logging.info(f"Starting processing call_id={call_id} recording_url_id={recording_url_id}")
+            logging.info(f"Starting processing call_id={call_id}")
 
             # download the audio
             self.download_audio_obj.download(call_url, call_id)
@@ -71,23 +72,13 @@ class Interface():
 
             # update hubspot
             self.hubspot_client_obj.update_summary_and_sentiment_score(call_id, summary)
-            # log success
-            with open("logs/success_files.txt", "a") as f:
-                f.write(
-                    f"[{datetime.now()}] call_id: {call_id} recording_url_id: {recording_url_id} Processed successfully.\n"
-                )
                 
-            logging.info(f"[SUCCESS] call_id={call_id} recording_url_id={recording_url_id}")
+            logging.info(f"[SUCCESS] call_id={call_id} recording_url={call_url}")
             return f"[SUCCESS] {call_id}"
 
         except Exception as err:
-            # log failure
-            with open("logs/failed_files.txt", "a") as f:
-                f.write(
-                    f"[{datetime.now()}] call_id: {call_id} recording_url_id: {recording_url_id} error: {err}\n"
-                )
-
-            logging.error(f"[FAILED] call_id={call_id} recording_url_id={recording_url_id} error={err}")
+            logging.error(f"[FAILED] call_id={call_id} recording_url={call_url} error={err}")
+            self.not_processed_files+=1
             return f"[FAILED] {call_id}: {err}"
 
         finally:
@@ -107,7 +98,6 @@ class Interface():
             call_recording_dict = {
                 call["call_id"]: {
                     "recording_url": call["recording_url"],
-                    # "recording_url_id": call.properties.get("recording_url_id") or call.properties.get("recording_url_id", None)
                 }
                 for call in call_recordings
             }                                                              # changed
@@ -135,10 +125,18 @@ class Interface():
                     print("call_processed_count: ", call_processed_count)
                     call_processed_count+=1
 
+            
+            print("Failed processed files: ", self.not_processed_files)
             print("All threads completed!")
 
         except Exception as err:
             raise Exception(f"Unexpected error: {err}")
+        
+        finally:
+            try:
+                self.clean_downloads_folder()
+            except:
+                pass
 
 
     def test_run(self):
@@ -185,6 +183,21 @@ class Interface():
 
         except Exception as err:
             raise Exception(f"Unexpected error: {err}")
+        
+
+    def clean_downloads_folder(self):
+        try:
+            for filename in os.listdir(self.file_path):
+                file_path = os.path.join(self.file_path, filename)
+
+                # remove only files (not subfolders)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+
+            logging.info("Downloads folder cleaned successfully.")
+
+        except Exception as err:
+            logging.error(f"Failed to clean downloads folder: {err}")
         
 
 
