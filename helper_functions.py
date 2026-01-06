@@ -91,12 +91,13 @@ class SentimentScoreExtractor:
         Class to get Sentiment score from summary
     '''
     sentiment_pattern = r"Rating:\s*(\d+)/10"
+    normalized_csat_pattern = r"Normalized CSAT \(0-10\):\*\*\s*([0-9]+(?:\.[0-9]+)?)"
 
     def get_sentiment(self, summary):
         import re
         if not summary:
             return None
-        match = re.search(self.sentiment_pattern, summary)
+        match = re.search(self.normalized_csat_pattern, summary)
         if match:
             return match.group(1)
         
@@ -104,5 +105,6 @@ class SentimentScoreExtractor:
 
 
 if __name__ == "__main__":
-    url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
-    print(url_id_obj.get_recording_url_id())
+    s_obj = SentimentScoreExtractor()
+    with open("summary1.txt", "r") as f:
+        print(s_obj.get_sentiment(f.read()))

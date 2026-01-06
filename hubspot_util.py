@@ -198,11 +198,11 @@ class HubSpotClient:
         try:
             sentiment_score = self.sentiment_extractor_obj.get_sentiment(summary)
             if not sentiment_score:
-                raise ValueError("Cannot find Sentiment score in summary.")
+                raise ValueError("Cannot find CSAT score in summary.")
             
             update_obj = SimplePublicObjectInput(properties={
                 "model_to_hb_transcription": summary,
-                "sentiment_score": int(sentiment_score)
+                "sentiment_score":  sentiment_score
             })
 
             self.client.crm.objects.calls.basic_api.update(
@@ -214,11 +214,8 @@ class HubSpotClient:
             
 
         except Exception as err:
-            with open("logs/failed_files.txt", 'a') as failed_file:
-                curr_time_stamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                failed_file.write(f"[{curr_time_stamp}] call_id: {call_id} failed to update call summary and sentiment_score : {err}\n")
-            
             print(f"Failed to update call {call_id}: {err}")
+            raise
 
 
     def bulk_update_call_transcription(self, calls_info: list):
@@ -373,13 +370,18 @@ class HubSpotClient:
 
                     company_obj = self.client.crm.companies.basic_api.get_by_id(
                         company_id,
-                        properties=["name"]
+                        properties=["name", "process"]
                     )
+
+                    if company_obj.properties.get("process") != "MEC":
+                        continue
+                    
                     print({
                         "call_id": call_id,
                         "company_name": company_obj.properties.get("name"),
                         "timestamp": call.properties.get("hs_timestamp"),
-                        "call_duration": call.properties.get("hs_call_duration")
+                        "call_duration": call.properties.get("hs_call_duration"),
+                        "company_process": company_obj.properties.get("process")                
                     })
 
                     final_results.append({
@@ -469,10 +471,10 @@ if __name__ == "__main__":
     hubspot_client = HubSpotClient(HUBSPOT_TOKEN)
 
     # for call_id in ["282969248463", "283215137471", "283110276796", "283222715127"]:
-    for call_id in ["283234131686", "283260662491"]:
-        print(hubspot_client.get_call_by_id(call_id))
+    # for call_id in ["284630409956"]:
+    #     print(hubspot_client.get_call_by_id(call_id))
 
-    # print(hubspot_client.get_call_with_recording_url_and_company_name_today())
+    print(hubspot_client.get_call_with_recording_url_and_company_name_today())
     # sentiment_score_extractor_obj = SentimentScoreExtractor()
     # url_id_obj = GetRecordingUrlIdFromCsv("/home/aryanverma/hubspot_integration/Voice-To-Transcript/updated_url_sheet.csv")
     # url_ids = url_id_obj.get_recording_url_id()

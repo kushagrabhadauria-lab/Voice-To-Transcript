@@ -148,17 +148,51 @@ class GeminiFileManager:
 
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT = """
-       # ROLE
+
+    # ROLE
         You are an expert Call Quality Analyst specializing in Customer Satisfaction (CSAT) and Agent Performance.
+        
+        
+        # SPEAKER MAPPING (MANDATORY)
+            Before providing the evaluation, identify every unique speaker and assign them to a TEAM:
+            - TEAM AGENT: Anyone representing the company (e.g., Agent 1, Supervisor, Technical Specialist).
+            - TEAM CUSTOMER: Anyone on the external side (e.g., Primary Customer, Intermediary/Staff, Spouse).
+
+        
+        # IDENTIFICATION ANCHORS
+            - AGENT Side: Uses professional greetings, asks for verification, has access to internal systems, or transfers the call.
+            - CUSTOMER Side: Provides personal info, explains the grievance, or is the one being helped.        
+
+        # CORE DEFINITIONS (MANDATORY)
+        - **AGENT(S):** One or more speakers representing the company.
+        - **CUSTOMER(S):** One or more external speakers (owner, staff, family member, intermediary).
+        - **PRIMARY CUSTOMER:** The decision-maker or account owner, if identifiable.
+        - **INTERMEDIARY:** A customer-side participant who is NOT the decision-maker (e.g., receptionist, staff member, relative).
+
+        IMPORTANT:
+        - There may be MULTIPLE agents and/or MULTIPLE customers.
+        - NEVER merge agent speech into customer speech or vice versa.
+        - Don't assume the first speaker is the customer.
+        - Don't assume the person who answers is the owner or decision-maker.
 
         # TASK
-        Analyze the provided call recording and generate a comprehensive CSAT report. You must provide evidence for every score given.
+        Analyze the call recording and generate a CSAT report based strictly on spoken evidence.
 
-        # ANALYSIS GUIDELINES
-        - OBJECTIVITY: Score based on explicit verbal cues and outcomes, not assumptions.
-        - DIFFERENTIATION: Clearly identify the CUSTOMER and the AGENT.
-        - EVIDENCE-BASED: For every score, provide a specific quote or reference from the call.
-        - SCORING: Strictly follow the 0–10 scale. Use decimals (e.g., 7.5) if necessary for nuance.
+        # ANALYSIS RULES
+        - OBJECTIVITY: Use only spoken content. No assumptions.
+        - MULTI-PARTICIPANT AWARENESS:
+        - Attribute statements to roles, not individuals unless explicitly named.
+        - If multiple agents/customers speak, evaluate collective interaction quality.
+        - INTERMEDIARY HANDLING:
+        - If the customer-side speaker is not the decision-maker, clearly label them as INTERMEDIARY.
+        - Do NOT penalize CSAT for lack of resolution if the PRIMARY CUSTOMER never joined the call.
+
+        # SCORING SCOPE (CRITICAL)
+        - Score AGENT PERFORMANCE based on how agents handled whoever they spoke with.
+        - Score CUSTOMER SENTIMENT based ONLY on spoken customer-side reactions.
+        - If resolution was impossible due to speaking only with an INTERMEDIARY, reflect this in scoring justification.
+
+
 
         # SCORING FRAMEWORK
         
@@ -188,11 +222,13 @@ class CallSummaryGenerator:
         - 4–7: Standard sign-off; no summary of next steps.
         - 0–3: Call cut off abruptly or customer ended the call in anger.
 
+        
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
 
         ## 1. CALL OVERVIEW
-        - **Call Type:** [Inbound/Outbound] | [Support/Sales/Complaint]
-        - **Language:** - **Outcome:** [Resolved/Unresolved/Escalated]
+        - **Call Type:** [Support/Sales/Complaint/Contact Attempt]
+        - **Language:**
+        - **Outcome:** [Resolved/Unresolved/Escalated]
 
         ## 2. PARTICIPANTS
         - **Agent:** [Name/Role] | [Style: e.g., Patient, Authoritative, Passive]
@@ -200,7 +236,9 @@ class CallSummaryGenerator:
 
         ## 3. CALL PURPOSE & KEY TOPICS
         - **Main reason for call:**
+          (Reflect the INITIATING SPEAKER’S objective.)
         - **Customer’s concern/request:**
+          (Decision-maker / Intermediary / Information provider)
         - **Related issues discussed:**
 
         ## 4. CSAT SCORECARD
@@ -228,6 +266,7 @@ class CallSummaryGenerator:
         - **Normalized CSAT (0–10):** [Weighted Average]
         - **Executive Summary:** [3-sentence summary of why this score was given.]
         - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
+
     """
 
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
@@ -375,7 +414,7 @@ class CallSummaryPipeline:
 if __name__ == "__main__":
     load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
-    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=1763533443.265374&type=rec&token=cS9OT1lmS01vV2hhdlVBSWJpU2FlNVhycUsvRW9xNWcyNVJJNWpPUjFYdmNJeHRXZ1NIbUVyZjFLRDY3NkZXczo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=33e030fb-9d20-4891-a076-483724126d5d&type=rec&token=Njl6aXhvNlFvYXpwbjdTaGN5Mmdjb1dONC9qOHdrdklDSkd0QWhFUUJYZnF3NHBnR2ZSS2diZzdONzdSa3A2UTo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
     FILE_PATH = os.getcwd()+"/downloads/call_19.mp3"
 
     start_time = datetime.now()
@@ -383,10 +422,11 @@ if __name__ == "__main__":
 
     pipeline = CallSummaryPipeline(GEMINI_KEY, RECORDING_URL)
     pipeline.set_file_path(FILE_PATH)
-    summary = pipeline.run()
-    with open("summary3.txt", "w") as f:
+    with open("summary1.txt", "w") as f:
+        summary = pipeline.run()
         f.write(summary)
 
+    
     end_time = datetime.now()
     duration = end_time - start_time
 
