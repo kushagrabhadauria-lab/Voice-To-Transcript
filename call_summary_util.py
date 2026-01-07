@@ -12,7 +12,6 @@ from google.genai.types import UploadFileConfig
 import logging
 from dotenv import load_dotenv
 import threading
-import time
 
 
 logging.basicConfig(
@@ -148,197 +147,112 @@ class GeminiFileManager:
 
 class CallSummaryGenerator:
     FILTERED_SUMMARY_PROMPT_TEMPLATE = """
-    # ROLE
-    You are an expert Call Quality Analyst specializing in Customer Satisfaction (CSAT) and Agent Performance.
+        You are a professional call transcription engine.
 
-    # TASK
-    Perform ALL tasks in ONE response:
-    1. Verbatim transcription with speaker attribution
-    2. CSAT evaluation (only if applicable)
+        # TASK: VERBATIM TRANSCRIPTION (STRICT MODE)
 
-    # CORE DEFINITIONS (MANDATORY)
-    - **AGENT(S):** One or more speakers representing the company.
-    - **CUSTOMER(S):** One or more external speakers (owner, staff, family member, intermediary).
-    - **PRIMARY CUSTOMER:** The decision-maker or account owner, if identifiable.
-    - **INTERMEDIARY:** A customer-side participant who is NOT the decision-maker.
+        Generate a complete, word-for-word transcript of ONLY intentional human conversation
+        between call participants.
 
-    IMPORTANT RULES:
-    - There may be MULTIPLE agents and/or MULTIPLE customers.
-    - Label speakers strictly as:
-    - Agent1, Agent2, Agent3…
-    - Customer1, Customer2, Customer3…
-    - NEVER merge agent speech into customer speech or vice versa.
-    - NEVER assume identity, ownership, or role beyond spoken evidence.
-    - If no names are spoken, DO NOT invent names.
+        --------------------------------------------------
+        # SPEAKER MAPPING (MANDATORY – FIRST STEP)
+        Before writing the transcript, internally identify every unique speaker
+        and permanently assign them to ONE team.
 
-    # AUDIO VALIDITY & CALL TYPE CHECK (FIRST AND MANDATORY)
+        ## TEAMS
+        - TEAM AGENT:
+        Anyone representing the company
+        (Agent, Agent 2, Supervisor, Technical staff)
 
-    Before transcription or scoring, classify the call into ONE of the following:
+        - TEAM CUSTOMER:
+        Anyone external to the company
+        (Primary customer, owner, staff, intermediary, family member)
 
-    ---
+        --------------------------------------------------
+        # IDENTIFICATION ANCHORS (STRICT)
+        Use these signals to decide roles:
 
-    ### CASE A: FORWARDED TO VOICEMAIL
-    Condition:
-    - Call reaches voicemail greeting
-    - No live customer-side interaction occurs
-    - If Only background voices, noise, silence, breathing, or unintelligible audio
+        ## AGENT SIDE INDICATORS
+        - Professional greetings (good morning, good afternoon)
+        - Introduces self or company
+        - Asks for verification or details
+        - Requests numbers, confirms data
+        - Talks about systems, quality check, process
+        - Controls the call flow
 
+        ## CUSTOMER SIDE INDICATORS
+        - Responds to agent questions
+        - Provides phone numbers or personal info
+        - Asks for help or clarification
+        - Redirects agent to owner / another number
+        - Explains situation or issue
 
-    Return EXACTLY:
+        --------------------------------------------------
+        # ROLE FREEZE RULE (VERY IMPORTANT)
+        - Once a speaker is classified as AGENT or CUSTOMER:
+        ❌ NEVER change their role later.
+        ❌ NEVER merge agent speech into customer speech.
+        ❌ NEVER swap labels mid-call.
+        - Even if wording sounds informal or confusing, KEEP THE ORIGINAL ROLE.
 
-    CALL FORWARDED TO VOICEMAIL.
-    Message Type: Voicemail
-    Customer Sentiment Score: 400
-    No CSAT evaluation applicable.
-    Transcription should include only the voicemail audio.
+        ⚠️ Do NOT assume the first speaker is the customer.
 
-    STOP further analysis.
+        --------------------------------------------------
+        # CORE DEFINITIONS (MANDATORY)
+        - AGENT(S): One or more speakers representing the company.
+        - CUSTOMER(S): One or more external speakers.
+        - PRIMARY CUSTOMER: Decision-maker or owner, if identifiable.
+        - INTERMEDIARY: Customer-side speaker who is NOT the owner.
 
-    ---
+        --------------------------------------------------
+        # STRICT EXCLUSIONS
+        DO NOT transcribe:
+        - Voicemail
+        - IVR / automated system
+        - Ringing tones
+        - Silence
+        - Background voices
+        - Office noise
+        - TV / radio
+        - Any non-participant speech
 
-    ### CASE B: CONNECTED BUT NO INTERACTION (BACKGROUND VOICE / NOISE ONLY)
-    Condition:
-    - Call connects
-    - No agent–customer dialogue occurs
-    - Only background voices, noise, silence, breathing, or unintelligible audio
+        --------------------------------------------------
+        # LANGUAGE & SCRIPT (VERY IMPORTANT)
+        - Preserve original spoken language.
+        - If Hindi or Hinglish is spoken:
+        ➜ Write ONLY in English alphabets (Roman Hindi).
+        - ❌ NEVER use Devanagari (हिंदी लिपि).
+        - English remains English.
 
-    Return EXACTLY:
+        --------------------------------------------------
+        # VERBATIM RULES
+        - Include fillers (haan, accha, um) ONLY if meaningful.
+        - Do NOT correct grammar or clean language.
 
-    CALL CONNECTED BUT NO INTERACTION DETECTED.
-    Reason: Background audio present without agent–customer exchange.
-    Customer Sentiment Score: 404
-    No CSAT evaluation applicable.
+        --------------------------------------------------
+        # LABELING (STRICT)
+        - Agent:
+        - Agent 2:
+        - Customer:
+        - Customer 2:
 
-    STOP further analysis.
+        --------------------------------------------------
+        # CLARITY TAGS
+        - [overlapping] → only for simultaneous speech
+        - [unintelligible] → only when spoken words are unclear
+        - Never for noise or silence
 
-    ---
+        --------------------------------------------------
+        # CRITICAL FALLBACK RULE
+        If there is no meaningful agent–customer conversation, output EXACTLY:
 
-    ### CASE C: INVALID CALL
-    A call is INVALID if:
-    - Only agents speak
-    - No customer-side participant responds verbally
-    - Audio contains only silence, noise, music, or unintelligible speech
-    - Voices exist but no meaningful exchange occurs
+        [No agent-customer conversation detected]
 
-    Return EXACTLY:
-
-    NO VALID CONVERSATION DETECTED.
-    Reason: No meaningful interaction between agent(s) and customer-side participant(s).
-    Customer Sentiment Score: 503
-    No CSAT evaluation applicable.
-
-    STOP further analysis.
-
-    ---
-
-    ### CASE D: VALID CONVERSATION
-    Proceed with FULL transcription and CSAT analysis.
-
-    ---
-
-    # TRANSCRIPTION RULES (MANDATORY)
-    - Transcribe VERBATIM.
-    - Prefix every line with the correct role label.
-    Example:
-    Agent1:
-    Customer1:
-    Agent2:
-    - Preserve pauses, interruptions, and incomplete sentences when relevant.
-    - Do NOT summarize in the transcription section.
-
-    ---
-
-    # ANALYSIS RULES
-    - OBJECTIVITY: Use ONLY spoken content.
-    - MULTI-PARTICIPANT AWARENESS:
-    - Evaluate collective agent performance if multiple agents speak.
-    - Evaluate collective customer sentiment if multiple customers speak.
-    - INTERMEDIARY HANDLING:
-    - Clearly label customer-side speakers as PRIMARY CUSTOMER or INTERMEDIARY where evidence exists.
-    - Do NOT penalize agents if resolution was impossible due to only speaking with an INTERMEDIARY.
-
-    ---
-
-    # SCORING SCOPE (CRITICAL)
-    - Score AGENT PERFORMANCE based on how agents handled whoever they spoke with.
-    - Score CUSTOMER SENTIMENT based ONLY on spoken customer-side reactions.
-    - If resolution was impossible due to role limitations, explain clearly in justification.
-
-    ---
-
-    # SCORING FRAMEWORK
-
-    1. ISSUE RESOLUTION STATUS (30%)
-    - 9–10: Issue fully resolved
-    - 6–8: Partial resolution with clear next steps
-    - 2–5: Unresolved with confusion
-    - 0–1: No resolution or escalation demanded
-
-    2. CUSTOMER SENTIMENT TRAJECTORY (10%)
-    - 9–10: Negative/Neutral → Strong Positive
-    - 6–8: Negative → Neutral/Calm
-    - 2–5: Negative → Negative/Worsened
-
-    3. CUSTOMER TRUST & CONFIDENCE (10%)
-    - 8–10: Explicit appreciation or trust
-    - 4–7: Neutral compliance
-    - 0–3: Doubt, threat, or dissatisfaction
-
-    4. AGENT HANDLING QUALITY (30%)
-    - 8–10: Empathy, clarity, active listening
-    - 5–7: Polite but limited depth
-    - 0–4: Defensive, rude, incorrect
-
-    5. CLOSURE QUALITY (20%)
-    - 8–10: Clear summary and positive close
-    - 4–7: Standard close
-    - 0–3: Abrupt or negative ending
-
-    ---
-
-    # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
-
-    ## 1. CALL OVERVIEW
-    - **Call Type:** [Support/Sales/Complaint/Contact Attempt/Inquiry]
-    - **Language:**
-    - **Outcome:** [Resolved/Unresolved/Escalated/Partially Resolved]
-
-    ## 2. PARTICIPANTS
-    - **Agent(s):** Agent1, Agent2 (if applicable)
-    - **Customer(s):** Customer1 (Primary / Intermediary), Customer2 (if applicable)
-
-    ## 3. CALL PURPOSE & KEY TOPICS
-    - **Main reason for call:**
-    - **Customer’s concern/request:**
-    - **Related issues discussed:**
-
-    ## 4. CSAT SCORECARD
-    a) ISSUE RESOLUTION ASSESSMENT  
-    - Score: [0–10]/10  
-    - Justification: [Single sentence with specific evidence or quote]
-
-    b) CUSTOMER SENTIMENT TRAJECTORY  
-    - Score: [0–10]/10  
-    - Justification: [Single sentence with specific evidence or quote]
-
-    c) CUSTOMER TRUST & CONFIDENCE  
-    - Score: [0–10]/10  
-    - Justification: [Single sentence with specific evidence or quote]
-
-    d) AGENT HANDLING QUALITY  
-    - Score: [0–10]/10  
-    - Justification: [Single sentence with specific evidence or quote]
-
-    e) CLOSURE QUALITY  
-    - Score: [0–10]/10  
-    - Justification: [Single sentence with specific evidence or quote]
-
-    ## 5. FINAL ASSESSMENT
-    - **Normalized CSAT (0–10):** [Weighted Average]
-    - **Executive Summary:** [3-sentence summary of why this score was given.]
-    - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
-
-    ## 6. TRANSCRIPTION
+        --------------------------------------------------
+        # OUTPUT FORMAT
+        - Output ONLY the transcript or the fallback line.
+        - Never return empty output.
+        - Never explain decisions.
 
     """
 
@@ -423,11 +337,12 @@ class CallSummaryGenerator:
 
         response = self.call_gemini_with_retry([Content(parts=parts)])
 
-        summary = response.text
-        if not summary:
-            raise ValueError("Empty summary after retry.")
+        summary = response.text.strip() if response.text else ""
 
-        return summary.strip()
+        if not summary:
+            return "[No agent-customer conversation detected]"
+
+        return summary
 
 
 
@@ -482,14 +397,18 @@ class CallSummaryPipeline:
 
 
 CALL_RECORDS = [
-    {
-        "record_id" : "transcriptapphubspot",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c81957d5-8745-4c0f-b7a1-2af3ec4088bd&type=rec&token=Mk13cENzQkR1NWF3eXlCaE5BRytSZU1ZakV3YzdkcktEcUlpT0VXWUtRZmU3dVBWNXhVOW9NZEFKaUZEbTlhSjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    },
     # {
-    #     "record_id" : "kas8minwali",
-    #     "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=571d8641-7d8c-4b86-ad94-98c6b54819c8&type=rec&token=L1NlZkc1UTlmUXh2WVNHNmc2ekNWL01tYktTa3YxNVFQNG9VanRKVUh6eldWMVFvZjdHUldGRlhyY0ZrVmtCNjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
-    # }
+    #     "record_id" : "291663327937",
+    #     "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=85fe084f-59aa-4289-a068-ae649f67d014&type=rec&token=T2N0dFg2OWwxVjZUYmFrcHE2Z3YyQ0lWYml2QzRhMGJuQUVIRzd2MXF2QkRzNWF2aHRzbHhLRDd5TzlVREpFVzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D",
+    # },
+    # {
+    #     "record_id" : "294518645496",
+    #     "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=4fc0c3cd-3dea-403d-b43a-aee7299ad824&type=rec&token=Y0F5alRYcXRMNFl0RmVMQU9rTWduZDZCMlJWUEJ1U1g3R1ROY3JUb2ZTTklXRVE2WUhTb2Z3bG5tTTQwTS9ZVDo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D",
+    # },
+    {
+        "record_id" : "apphubspot",
+        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c81957d5-8745-4c0f-b7a1-2af3ec4088bd&type=rec&token=Mk13cENzQkR1NWF3eXlCaE5BRytSZU1ZakV3YzdkcktEcUlpT0VXWUtRZmU3dVBWNXhVOW9NZEFKaUZEbTlhSjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+    }
 ]
 
 
@@ -497,7 +416,7 @@ if __name__ == "__main__":
     load_dotenv()
     GEMINI_KEY = os.getenv("GEMINI_KEY")
 
-    output_dir = "call_summaries"
+    output_dir = "transcription"
     os.makedirs(output_dir, exist_ok=True)
 
     start_time = datetime.now()
@@ -519,7 +438,7 @@ if __name__ == "__main__":
 
             output_file = os.path.join(
                 output_dir,
-                f"summary_{record_id}.txt"
+                f"{record_id}.txt"
             )
 
             with open(output_file, "w", encoding="utf-8") as f:
