@@ -446,9 +446,9 @@ if __name__ == "__main__":
     
     # NOTE: .env and GEMINI_KEY are no longer needed
     
-    RECORDING_URL = None # Set to None if using local file
+    RECORDING_URL = "https://cloudphone.tatateleservices.com/file/recording?callId=f41829f2-5f02-4710-b31a-8ea7820d2421&type=rec&token=Y1A3eWtzUjh5ckF2bjlyQlRvaUhIdTc0OXluQmxsVkVpcGxRWmhNUUhQd1k5Y3FoZVdrVk90d1Jja253WEVVYzo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D" # Set to None if using local file
     # Use an existing local file if RECORDING_URL is None
-    FILE_PATH = os.getcwd()+"/downloads/test.mp3" 
+    FILE_PATH = None 
 
     if RECORDING_URL is None and not os.path.exists(FILE_PATH):
         logging.error(f"FATAL: Local file not found at {FILE_PATH}. Please check the path or provide a URL.")
@@ -460,12 +460,12 @@ if __name__ == "__main__":
 
     try:
         # Initialize pipeline without API Key
-        pipeline = CallSummaryPipeline(RECORDING_URL) 
+        pipeline = CallSummaryPipeline(recording_url=RECORDING_URL) 
         if RECORDING_URL is None:
              pipeline.set_file_path(FILE_PATH)
              
         summary = pipeline.run()
-
+        print("summary: ", summary)
         end_time = datetime.now()
         duration = end_time - start_time
 

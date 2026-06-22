@@ -252,6 +252,7 @@ class CallSummaryGenerator:
         - 4–7: Standard sign-off; no summary of next steps.
         - 0–3: Call cut off abruptly or customer ended the call in anger.
 
+        
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
         ## 1. EXECUTIVE SUMMARY 
             [3-sentence summary of why this score was given.]
@@ -261,7 +262,12 @@ class CallSummaryGenerator:
         - **Language:**
         - **Outcome:** [Resolved/Unresolved/Escalated]
 
-        ## 3. PARTICIPANTS
+        ## 1. CALL OVERVIEW
+        - **Call Type:** [Support/Sales/Complaint/Contact Attempt]
+        - **Language:**
+        - **Outcome:** [Resolved/Unresolved/Escalated]
+
+        ## 2. PARTICIPANTS
         - **Agent:** [Name/Role] | [Style: e.g., Patient, Authoritative, Passive]
         - **Customer:** [Name] | [Style: e.g., Frustrated, Tech-savvy, Distressed]
 
@@ -296,6 +302,7 @@ class CallSummaryGenerator:
         ## 6. FINAL ASSESSMENT
         - **Normalized CSAT (0–10):** [Weighted Average]
         - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
+
     """
 
     def __init__(self, api_key, model_name="gemini-2.5-flash"):
@@ -491,6 +498,7 @@ if __name__ == "__main__":
         except Exception as e:
             logging.error(f"❌ Failed for record_id={record_id}: {e}")
 
+    
     end_time = datetime.now()
     duration = end_time - start_time
 
