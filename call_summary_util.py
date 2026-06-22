@@ -253,24 +253,26 @@ class CallSummaryGenerator:
         - 0–3: Call cut off abruptly or customer ended the call in anger.
 
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
-
-        ## 1. CALL OVERVIEW
+        ## 1. EXECUTIVE SUMMARY 
+            [3-sentence summary of why this score was given.]
+        
+        ## 2. CALL OVERVIEW
         - **Call Type:** [Support/Sales/Complaint/Contact Attempt]
         - **Language:**
         - **Outcome:** [Resolved/Unresolved/Escalated]
 
-        ## 2. PARTICIPANTS
+        ## 3. PARTICIPANTS
         - **Agent:** [Name/Role] | [Style: e.g., Patient, Authoritative, Passive]
         - **Customer:** [Name] | [Style: e.g., Frustrated, Tech-savvy, Distressed]
 
-        ## 3. CALL PURPOSE & KEY TOPICS
+        ## 4. CALL PURPOSE & KEY TOPICS
         - **Main reason for call:**
           (Reflect the INITIATING SPEAKER’S objective.)
         - **Customer’s concern/request:**
           (Decision-maker / Intermediary / Information provider)
         - **Related issues discussed:**
 
-        ## 4. CSAT SCORECARD
+        ## 5. CSAT SCORECARD
             a) **ISSUE RESOLUTION ASSESSMENT**
             - **Score:** [0-10]/10
             - **Justification:** [Single sentence with specific evidence or quote]
@@ -291,9 +293,8 @@ class CallSummaryGenerator:
             - **Score:** [0-10]/10
             - **Justification:** [Single sentence with specific evidence or quote]
 
-        ## 5. FINAL ASSESSMENT
+        ## 6. FINAL ASSESSMENT
         - **Normalized CSAT (0–10):** [Weighted Average]
-        - **Executive Summary:** [3-sentence summary of why this score was given.]
         - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
     """
 
