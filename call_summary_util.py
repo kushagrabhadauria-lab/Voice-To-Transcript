@@ -12,6 +12,7 @@ from google.genai.types import UploadFileConfig
 import logging
 from dotenv import load_dotenv
 import threading
+from helper_functions import SentimentScoreExtractor
 
 
 logging.basicConfig(
@@ -492,7 +493,7 @@ if __name__ == "__main__":
 
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(summary)
-
+            print("summary_sentiment_score: ", SentimentScoreExtractor().get_sentiment(summary))
             logging.info(f"✅ Summary saved: {output_file}")
 
         except Exception as e:

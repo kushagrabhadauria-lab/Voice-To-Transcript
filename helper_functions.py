@@ -90,21 +90,30 @@ class SentimentScoreExtractor:
     '''
         Class to get Sentiment score from summary
     '''
-    sentiment_pattern = r"Rating:\s*(\d+)/10"
-    normalized_csat_pattern = r"Normalized CSAT \(0-10\):\*\*\s*([0-9]+(?:\.[0-9]+)?)"
+    
+    normalized_csat_pattern = (
+        r"Normalized\s+CSAT[^:]*:\s*[\s\*]*([0-9]+(?:\.[0-9]+)?)"
+    )
 
     def get_sentiment(self, summary):
         import re
+
         if not summary:
             return None
-        match = re.search(self.normalized_csat_pattern, summary)
+
+        match = re.search(
+            self.normalized_csat_pattern,
+            summary,
+            re.IGNORECASE
+        )
+
         if match:
             return match.group(1)
-        
+
         return None
 
 
 if __name__ == "__main__":
     s_obj = SentimentScoreExtractor()
-    with open("summary1.txt", "r") as f:
+    with open("transcription/apphubspot.txt", "r") as f:
         print(s_obj.get_sentiment(f.read()))

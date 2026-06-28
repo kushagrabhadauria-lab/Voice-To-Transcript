@@ -197,13 +197,18 @@ class HubSpotClient:
         '''
         try:
             sentiment_score = self.sentiment_extractor_obj.get_sentiment(summary)
-            if not sentiment_score:
-                raise ValueError("Cannot find CSAT score in summary.")
             
-            update_obj = SimplePublicObjectInput(properties={
-                "model_to_hb_transcription": summary,
-                "sentiment_score":  sentiment_score
-            })
+            properties = {
+                "model_to_hb_transcription": summary
+            }
+            
+            if sentiment_score:
+                properties["sentiment_score"] = sentiment_score
+            else:
+                print(f"Warning: Cannot find CSAT score in summary for call {call_id}. Leaving sentiment_score blank.")
+                properties["sentiment_score"] = ""
+            
+            update_obj = SimplePublicObjectInput(properties=properties)
 
             self.client.crm.objects.calls.basic_api.update(
                 call_id=call_id,

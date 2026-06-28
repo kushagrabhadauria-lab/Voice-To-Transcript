@@ -246,6 +246,7 @@ class CallSummaryGenerator:
         - 0–3: Call cut off abruptly or customer ended the call in anger.
 
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
+        
         ## 1. EXECUTIVE SUMMARY 
             [3-sentence summary of why this score was given.]
         
@@ -291,7 +292,13 @@ class CallSummaryGenerator:
         - **Actionable Coaching Tip:** [One specific thing the agent could do better next time.]
     """
 
+    TRANSCRIPT_PROMPT = """
+        Please provide a highly accurate, word-for-word transcript of this audio recording. 
+        Label the speakers appropriately based on context (e.g., Agent, Customer, Speaker 1, etc.).
+    """
+
     def __init__(self, client, model_name="gemini-2.5-flash"): 
+
         self.client = client 
         self.model_name = model_name
 
@@ -370,6 +377,33 @@ class CallSummaryGenerator:
         logging.info("Summary generated successfully!")
         return summary.strip()
 
+    def generate_transcript(self, file_input, file_type):
+        '''
+            Generates transcript using the file input.
+        '''
+        logging.info("Generating word-for-word transcript...")
+        if file_type == "large":
+            parts = [
+                Part.from_uri(
+                    file_uri=file_input.uri,
+                    mime_type=file_input.mime_type
+                ),
+                Part.from_text(text=self.TRANSCRIPT_PROMPT),
+            ]
+        else:
+            parts = [
+                file_input,
+                Part.from_text(text=self.TRANSCRIPT_PROMPT),
+            ]
+        response = self.call_gemini_with_retry([Content(parts=parts, role="user")])
+        transcript = response.text        
+
+        if not transcript:
+            raise ValueError("Empty transcript after retry.")
+
+        logging.info("Transcript generated successfully!")
+        return transcript.strip()
+
 
 # --- CLASS UPDATED: Added Service Account Logic and Cleanup ---
 class CallSummaryPipeline:
@@ -418,7 +452,16 @@ class CallSummaryPipeline:
 
             # 3. Generate Summary
             summary = self.generator.generate_summary(file_obj_or_part, file_type)
-            logging.info(f"Length: {len(summary)} characters")
+            logging.info(f"Summary Length: {len(summary)} characters")
+            
+            # Check if sentiment score was generated
+            from helper_functions import SentimentScoreExtractor
+            score = SentimentScoreExtractor().get_sentiment(summary)
+            if not score:
+                logging.warning("Sentiment score not found in the summary. Falling back to generating a word-for-word transcript.")
+                summary = self.generator.generate_transcript(file_obj_or_part, file_type)
+                logging.info(f"Transcript Length: {len(summary)} characters")
+                
             return summary
 
         except Exception as e:
