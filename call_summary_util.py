@@ -254,7 +254,25 @@ class CallSummaryGenerator:
         - 0–3: Call cut off abruptly or customer ended the call in anger.
 
         
+        # KEY THEME CLASSIFICATION
+        Identify the key theme(s) (Functional Objects) discussed or achieved in the call from the list below. Multiple values are allowed if applicable.
+        - Welcome Call: #welcome_call
+        - Photoshoot: #photoshoot
+        - Website: #website
+        - IVR: #IVR
+        - Promo: #Promo
+        - Monthly Performance Report: #performance_report
+        - Standee: #standee
+        - Meta Ads: #meta_ads
+        - Video: #video_shoot
+        - Google Profile / GMB: #Google_profile
+        - Photo upload: #photo_upload
+
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
+        
+        ## Key Theme Achieved
+        [List all the applicable hashtags from the Key Theme Classification (comma-separated, e.g., #welcome_call, #website). If multiple apply, list all of them. If none apply, output None.]
+        
         ## 1. EXECUTIVE SUMMARY 
             [3-sentence summary of why this score was given.]
         
@@ -322,7 +340,7 @@ class CallSummaryGenerator:
                 pause_event.wait()   # Wait if system is paused
 
                 response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model=self.model_name,
                     contents=contents,
                     config=GenerateContentConfig(temperature=0.2)
                 )
@@ -457,7 +475,7 @@ CALL_RECORDS = [
     # },
     {
         "record_id" : "apphubspot",
-        "recording_url" : "https://cloudphone.tatateleservices.com/file/recording?callId=c81957d5-8745-4c0f-b7a1-2af3ec4088bd&type=rec&token=Mk13cENzQkR1NWF3eXlCaE5BRytSZU1ZakV3YzdkcktEcUlpT0VXWUtRZmU3dVBWNXhVOW9NZEFKaUZEbTlhSjo6YWIxMjM0Y2Q1NnJ0eXl1dQ%3D%3D"
+        "recording_url" : """https://app-na2.hubspot.com/contacts/49196845/record/0-2/125209112309?eschref=%2Fcontacts%2F49196845%2Fobjects%2F0-2%2Fviews%2F342872360%2Flist"""
     }
 ]
 

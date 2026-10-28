@@ -245,7 +245,24 @@ class CallSummaryGenerator:
         - 4–7: Standard sign-off; no summary of next steps.
         - 0–3: Call cut off abruptly or customer ended the call in anger.
 
+        # KEY THEME CLASSIFICATION
+        Identify the key theme(s) (Functional Objects) discussed or achieved in the call from the list below. Multiple values are allowed if applicable.
+        - Welcome Call: #welcome_call
+        - Photoshoot: #photoshoot
+        - Website: #website
+        - IVR: #IVR
+        - Promo: #Promo
+        - Monthly Performance Report: #performance_report
+        - Standee: #standee
+        - Meta Ads: #meta_ads
+        - Video: #video_shoot
+        - Google Profile / GMB: #Google_profile
+        - Photo upload: #photo_upload
+
         # OUTPUT STRUCTURE (DO NOT ALTER HEADINGS)
+        
+        ## Key Theme Achieved
+        [List all the applicable hashtags from the Key Theme Classification (comma-separated, e.g., #welcome_call, #website). If multiple apply, list all of them. If none apply, output None.]
         
         ## 1. EXECUTIVE SUMMARY 
             [3-sentence summary of why this score was given.]
